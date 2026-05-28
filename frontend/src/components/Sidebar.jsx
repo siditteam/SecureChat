@@ -34,7 +34,7 @@ function Avatar({ name, online, size = 'md', avatarFile = null }) {
           </div>
       }
       {online && (
-        <span className="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-white shadow-sm" />
+        <span className="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-ink-900 shadow-sm" />
       )}
     </div>
   );
@@ -49,16 +49,14 @@ function formatSeen(date) {
   return new Date(date).toLocaleDateString();
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
-
 function TabButton({ label, active, badge, onClick }) {
   return (
     <button
       onClick={onClick}
       className={`relative flex-1 py-2.5 text-sm font-semibold transition duration-200 rounded-lg ${
-        active 
-          ? 'bg-gradient-to-r from-orange-500 to-amber-400 text-white shadow-md'
-          : 'text-gray-600 hover:bg-gray-100'
+        active
+          ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-md shadow-primary-900/40'
+          : 'text-white/60 hover:bg-white/10'
       }`}
     >
       {label}
@@ -75,16 +73,16 @@ function FriendRow({ u, online, lastSeen, action, onAction, onMessage, isSelecte
   return (
     <div
       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mx-1 transition duration-150 ${
-        isSelected 
-          ? 'bg-gradient-to-r from-primary-100 to-primary-50 border-l-2 border-primary-500' 
-          : 'hover:bg-gray-50'
+        isSelected
+          ? 'bg-primary-500/20 border-l-2 border-primary-400'
+          : 'hover:bg-white/5'
       }`}
     >
       <button className="flex items-center gap-3 flex-1 min-w-0 text-left" onClick={onSelect}>
         <Avatar name={u.username} online={online} avatarFile={u.avatar} />
         <div className="min-w-0">
-          <p className="text-gray-900 text-sm font-semibold truncate">{u.username}</p>
-          <p className="text-gray-500 text-xs truncate">
+          <p className="text-white text-sm font-semibold truncate">{u.username}</p>
+          <p className="text-white/50 text-xs truncate">
             {online ? '🟢 Online' : lastSeen ? `Last seen ${formatSeen(lastSeen)}` : ''}
           </p>
         </div>
@@ -94,7 +92,7 @@ function FriendRow({ u, online, lastSeen, action, onAction, onMessage, isSelecte
         {action === 'message' && onMessage && (
           <button
             onClick={onMessage}
-            className="text-primary-500 hover:bg-primary-100 p-1.5 rounded-lg transition duration-150"
+            className="text-primary-400 hover:bg-primary-500/20 p-1.5 rounded-lg transition duration-150"
             title="Message"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -105,13 +103,13 @@ function FriendRow({ u, online, lastSeen, action, onAction, onMessage, isSelecte
         {action === 'add' && (
           <button
             onClick={onAction}
-            className="text-xs bg-primary-100 text-primary-600 hover:bg-primary-200 px-2.5 py-1 rounded-lg font-semibold transition duration-150"
+            className="text-xs bg-primary-500/20 text-primary-300 hover:bg-primary-500/30 px-2.5 py-1 rounded-lg font-semibold transition duration-150"
           >
             Add
           </button>
         )}
         {action === 'pending' && (
-          <span className="text-xs text-gray-500 bg-gray-200 px-2.5 py-1 rounded-lg">Sent</span>
+          <span className="text-xs text-white/50 bg-white/10 px-2.5 py-1 rounded-lg">Sent</span>
         )}
         {action === 'incoming' && (
           <>
@@ -124,8 +122,6 @@ function FriendRow({ u, online, lastSeen, action, onAction, onMessage, isSelecte
   );
 }
 
-// ── Main Sidebar ──────────────────────────────────────────────────────────────
-
 export default function Sidebar({ selectedUser, onSelectUser }) {
   const { user, logout } = useAuth();
   const { socket, connected } = useSocket();
@@ -134,21 +130,17 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
   const [tab, setTab] = useState('chats');
   const [showQR, setShowQR] = useState(false);
 
-  // Chats tab
   const [recentChats, setRecentChats] = useState([]);
   const [chatSearch, setChatSearch] = useState('');
 
-  // People tab
   const [friends, setFriends] = useState([]);
   const [peopleSearch, setPeopleSearch] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [searchStatuses, setSearchStatuses] = useState({}); // userId -> { status, requestId }
+  const [searchStatuses, setSearchStatuses] = useState({});
 
-  // Requests tab
   const [incoming, setIncoming] = useState([]);
   const [outgoing, setOutgoing] = useState([]);
 
-  // Online status overlay
   const [statusMap, setStatusMap] = useState({});
 
   const loadFriends = useCallback(async () => {
@@ -175,7 +167,6 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
   useEffect(() => { loadFriends(); loadIncoming(); }, [loadFriends, loadIncoming]);
   useEffect(() => { if (tab === 'requests') loadOutgoing(); }, [tab, loadOutgoing]);
 
-  // ── Socket events ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (!socket) return;
 
@@ -209,7 +200,6 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
     };
   }, [socket, loadFriends]);
 
-  // ── People search ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (!peopleSearch.trim()) { setSearchResults([]); return; }
 
@@ -218,7 +208,6 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
         const res = await axios.get(`${API}/users/search?q=${encodeURIComponent(peopleSearch.trim())}`);
         setSearchResults(res.data);
 
-        // Fetch friendship status for each result
         const statuses = await Promise.all(
           res.data.map((u) =>
             axios.get(`${API}/friends/status/${u._id}`)
@@ -234,7 +223,6 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
     return () => clearTimeout(t);
   }, [peopleSearch]);
 
-  // ── Actions ─────────────────────────────────────────────────────────────────
   const sendRequest = useCallback(async (userId) => {
     try {
       const res = await axios.post(`${API}/friends/request/${userId}`);
@@ -274,8 +262,6 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
     onSelectUser(chatUser);
   }, [onSelectUser]);
 
-  // ── Filtered chats ───────────────────────────────────────────────────────────
-  // Merge recent chats with friends, deduplicate
   const allChats = [...recentChats];
   friends.forEach((f) => { if (!allChats.find((c) => c._id === f._id)) allChats.push(f); });
   const filteredChats = chatSearch.trim()
@@ -287,13 +273,12 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
 
   const incomingCount = incoming.length;
 
-  // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <>
-      <div className="w-full md:w-[320px] flex-shrink-0 bg-white flex flex-col border-r border-gray-200 shadow-sm">
+      <div className="w-full md:w-[320px] flex-shrink-0 bg-ink-800/90 backdrop-blur-xl flex flex-col border-r border-white/10 shadow-xl">
 
         {/* Header */}
-        <div className="bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-400 text-white">
+        <div className="bg-gradient-to-r from-primary-800 via-primary-700 to-primary-600 text-white">
           <div className="flex items-center gap-3 px-4 py-4">
             <button onClick={() => navigate('/settings')} title="Settings" className="flex-shrink-0">
               <Avatar name={user?.username} online={connected} size="sm" avatarFile={user?.avatar} />
@@ -302,18 +287,17 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
               <div className="flex items-center gap-1.5">
                 <p className="font-semibold text-sm truncate">{user?.username}</p>
                 {user?.isAdmin && (
-                  <span className="text-[9px] bg-yellow-400 text-yellow-900 font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide flex-shrink-0">
+                  <span className="text-[9px] bg-primary-400/30 text-primary-200 font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide flex-shrink-0">
                     Admin
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${connected ? 'bg-success' : 'bg-gray-400'}`} />
-                <span className="text-xs opacity-90">{connected ? 'Online' : 'Reconnecting…'}</span>
+                <span className={`w-2 h-2 rounded-full ${connected ? 'bg-success' : 'bg-white/30'}`} />
+                <span className="text-xs opacity-80">{connected ? 'Online' : 'Reconnecting…'}</span>
               </div>
             </div>
             <div className="flex items-center gap-0.5">
-              {/* QR / invite button */}
               <button
                 onClick={() => setShowQR(true)}
                 title="My invite QR"
@@ -324,7 +308,6 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
                     d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                 </svg>
               </button>
-              {/* Settings */}
               <button
                 onClick={() => navigate('/settings')}
                 title="Settings"
@@ -335,19 +318,17 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
                     d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </button>
-              {/* Admin panel link (only for admins) */}
               {user?.isAdmin && (
                 <button
                   onClick={() => navigate('/admin')}
                   title="Admin panel"
                   className="hover:bg-white/20 p-2 rounded-lg transition duration-150"
                 >
-                  <svg className="w-4 h-4 text-yellow-300" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-primary-200" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 1l3.09 6.26L22 8.27l-5 4.87 1.18 6.88L12 16.77l-6.18 3.25L7 13.14 2 8.27l6.91-1.01L12 1z" />
                   </svg>
                 </button>
               )}
-              {/* Logout */}
               <button
                 onClick={logout}
                 title="Log out"
@@ -363,7 +344,7 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 px-3 py-3 bg-gray-50 border-b border-gray-200">
+        <div className="flex gap-2 px-3 py-3 bg-white/[0.03] border-b border-white/10">
           <TabButton label="Chats"    active={tab === 'chats'}    onClick={() => setTab('chats')} />
           <TabButton label="People"   active={tab === 'people'}   onClick={() => setTab('people')} />
           <TabButton label="Requests" active={tab === 'requests'} badge={incomingCount} onClick={() => setTab('requests')} />
@@ -377,20 +358,20 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
             <div className="flex flex-col gap-1 pt-2">
               <div className="px-3 pb-2">
                 <div className="relative">
-                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                   <input
                     value={chatSearch}
                     onChange={(e) => setChatSearch(e.target.value)}
                     placeholder="Search chats"
-                    className="w-full bg-gray-100 text-gray-900 rounded-lg pl-9 pr-3 py-2 text-sm outline-none placeholder-gray-400 border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                    className="w-full bg-white/10 text-white rounded-lg pl-9 pr-3 py-2 text-sm outline-none placeholder-white/30 border border-white/10 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
                   />
                 </div>
               </div>
 
               {filteredChats.length === 0 && (
-                <p className="text-gray-500 text-sm text-center py-8 px-4">
+                <p className="text-white/40 text-sm text-center py-8 px-4">
                   {friends.length === 0
                     ? '👋 Add friends to start chatting'
                     : '🔍 No chats match your search'}
@@ -417,23 +398,22 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
             <div className="flex flex-col gap-1 pt-2">
               <div className="px-3 pb-2">
                 <div className="relative">
-                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                   <input
                     value={peopleSearch}
                     onChange={(e) => setPeopleSearch(e.target.value)}
                     placeholder="Find people by username"
-                    className="w-full bg-gray-100 text-gray-900 rounded-lg pl-9 pr-3 py-2 text-sm outline-none placeholder-gray-400 border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                    className="w-full bg-white/10 text-white rounded-lg pl-9 pr-3 py-2 text-sm outline-none placeholder-white/30 border border-white/10 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
                     autoFocus
                   />
                 </div>
               </div>
 
-              {/* Search results */}
               {searchResults.length > 0 && (
                 <>
-                  <p className="text-gray-500 text-[11px] font-semibold uppercase tracking-wider px-4 py-2">🔎 Results</p>
+                  <p className="text-white/40 text-[11px] font-semibold uppercase tracking-wider px-4 py-2">🔎 Results</p>
                   {searchResults.map((u) => {
                     const s = searchStatuses[u._id];
                     const friendStatus = s?.status ?? 'none';
@@ -462,14 +442,13 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
                       />
                     );
                   })}
-                  <div className="h-px bg-gray-200 mx-4 my-1" />
+                  <div className="h-px bg-white/10 mx-4 my-1" />
                 </>
               )}
 
-              {/* Friends list */}
               {friends.length > 0 && (
                 <>
-                  <p className="text-gray-500 text-[11px] font-semibold uppercase tracking-wider px-4 py-2">
+                  <p className="text-white/40 text-[11px] font-semibold uppercase tracking-wider px-4 py-2">
                     👥 Friends · {friends.length}
                   </p>
                   {friends.map((u) => (
@@ -488,7 +467,7 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
               )}
 
               {friends.length === 0 && !peopleSearch && (
-                <p className="text-gray-500 text-sm text-center py-8 px-4">
+                <p className="text-white/40 text-sm text-center py-8 px-4">
                   Search for people to add as friends
                 </p>
               )}
@@ -498,10 +477,9 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
           {/* ── Requests tab ── */}
           {tab === 'requests' && (
             <div className="flex flex-col gap-1 pt-2">
-              {/* Incoming */}
               {incoming.length > 0 && (
                 <>
-                  <p className="text-gray-500 text-[11px] font-semibold uppercase tracking-wider px-4 py-2">
+                  <p className="text-white/40 text-[11px] font-semibold uppercase tracking-wider px-4 py-2">
                     📨 Incoming · {incoming.length}
                   </p>
                   {incoming.map((req) => (
@@ -520,14 +498,13 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
                       onSelect={() => {}}
                     />
                   ))}
-                  <div className="h-px bg-gray-200 mx-4 my-1" />
+                  <div className="h-px bg-white/10 mx-4 my-1" />
                 </>
               )}
 
-              {/* Outgoing */}
               {outgoing.length > 0 && (
                 <>
-                  <p className="text-gray-500 text-[11px] font-semibold uppercase tracking-wider px-4 py-2">
+                  <p className="text-white/40 text-[11px] font-semibold uppercase tracking-wider px-4 py-2">
                     📤 Sent · {outgoing.length}
                   </p>
                   {outgoing.map((req) => (
@@ -546,7 +523,7 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
               )}
 
               {incoming.length === 0 && outgoing.length === 0 && (
-                <p className="text-gray-500 text-sm text-center py-10 px-4">
+                <p className="text-white/40 text-sm text-center py-10 px-4">
                   ✨ No pending requests
                 </p>
               )}

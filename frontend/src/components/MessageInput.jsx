@@ -98,13 +98,13 @@ export default function MessageInput({ recipient, onSend, onSendMedia }) {
 
   return (
     <>
-      <div className="px-3 py-3 bg-white border-t border-gray-200 shadow-lg">
+      <div className="px-3 py-3 bg-ink-800/90 backdrop-blur-xl border-t border-white/10 shadow-lg">
         {error && <p className="text-error text-xs mb-2 px-1 font-medium">{error}</p>}
 
         {/* Timer picker */}
         {showTimer && (
-          <div className="mb-3 flex items-center gap-2 flex-wrap p-2 bg-gray-50 rounded-lg border border-gray-200">
-            <span className="text-gray-600 text-xs font-medium">Disappear after:</span>
+          <div className="mb-3 flex items-center gap-2 flex-wrap p-2 bg-white/[0.05] rounded-lg border border-white/10">
+            <span className="text-white/50 text-xs font-medium">Disappear after:</span>
             {EXPIRY_OPTIONS.map((opt) => (
               <button
                 key={opt.label}
@@ -112,7 +112,7 @@ export default function MessageInput({ recipient, onSend, onSendMedia }) {
                 className={`px-3 py-1 rounded-full text-xs font-semibold transition duration-150 ${
                   expiresIn === opt.value
                     ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
+                    : 'bg-white/10 text-white/60 border border-white/10 hover:bg-white/20'
                 }`}
               >
                 {opt.label}
@@ -128,9 +128,9 @@ export default function MessageInput({ recipient, onSend, onSendMedia }) {
             onClick={() => setShowTimer((s) => !s)}
             title="Set disappear timer"
             className={`flex-shrink-0 flex flex-col items-center p-2.5 rounded-full transition duration-150 ${
-              expiresIn 
-                ? 'text-primary-600 bg-primary-100' 
-                : 'text-gray-500 hover:bg-gray-100'
+              expiresIn
+                ? 'text-primary-400 bg-primary-500/20'
+                : 'text-white/40 hover:bg-white/10'
             }`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,7 +145,7 @@ export default function MessageInput({ recipient, onSend, onSendMedia }) {
             type="button"
             onClick={() => setShowCapture(true)}
             title="Send photo or video"
-            className="flex-shrink-0 p-2.5 rounded-full text-gray-500 hover:text-primary-600 hover:bg-primary-50 transition duration-150"
+            className="flex-shrink-0 p-2.5 rounded-full text-white/40 hover:text-primary-400 hover:bg-primary-500/20 transition duration-150"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -160,13 +160,13 @@ export default function MessageInput({ recipient, onSend, onSendMedia }) {
             onChange={(e) => { setText(e.target.value); emitTyping(); }}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSubmit(e)}
             placeholder="Type a message..."
-            className="flex-1 bg-gray-100 text-gray-900 rounded-full px-4 py-2.5 text-sm outline-none placeholder-gray-500 border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition duration-150"
+            className="flex-1 bg-white/10 text-white rounded-full px-4 py-2.5 text-sm outline-none placeholder-white/30 border border-white/10 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition duration-150"
           />
 
           <button
             type="submit"
             disabled={!text.trim() || sending}
-            className="flex-shrink-0 p-2.5 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full text-white disabled:opacity-40 disabled:cursor-not-allowed hover:from-primary-600 hover:to-primary-700 transition duration-150 shadow-md hover:shadow-lg"
+            className="flex-shrink-0 p-2.5 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full text-white disabled:opacity-40 disabled:cursor-not-allowed hover:from-primary-600 hover:to-primary-700 transition duration-150 shadow-md shadow-primary-900/50 hover:shadow-lg"
           >
             {sending ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

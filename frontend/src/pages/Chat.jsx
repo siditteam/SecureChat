@@ -12,7 +12,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
+    <div className="flex h-screen bg-ink-900 overflow-hidden">
       <div className={`${mobileShowChat ? 'hidden md:flex' : 'flex'} w-full md:w-auto flex-shrink-0`}>
         <Sidebar selectedUser={selectedUser} onSelectUser={handleSelectUser} />
       </div>

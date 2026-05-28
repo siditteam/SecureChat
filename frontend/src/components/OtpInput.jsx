@@ -72,10 +72,10 @@ export default function OtpInput({ length = 6, onComplete, disabled, reset }) {
           onKeyDown={(e) => handleKeyDown(e, i)}
           onPaste={handlePaste}
           onFocus={(e) => e.target.select()}
-          className={`w-11 h-12 text-center text-xl font-bold rounded-xl bg-[#2a3942] text-white border-2 outline-none transition-all duration-150 disabled:opacity-40 caret-transparent ${
+          className={`w-11 h-12 text-center text-xl font-bold rounded-xl bg-white/10 text-white border-2 outline-none transition-all duration-150 disabled:opacity-40 caret-transparent ${
             val
-              ? 'border-[#00a884] shadow-[0_0_0_3px_rgba(0,168,132,0.15)]'
-              : 'border-[#3a4a52] focus:border-[#00a884] focus:shadow-[0_0_0_3px_rgba(0,168,132,0.1)]'
+              ? 'border-primary-500 shadow-[0_0_0_3px_rgba(168,77,184,0.2)]'
+              : 'border-white/15 focus:border-primary-500 focus:shadow-[0_0_0_3px_rgba(168,77,184,0.15)]'
           }`}
         />
       ))}

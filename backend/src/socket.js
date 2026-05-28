@@ -99,6 +99,32 @@ module.exports = (io) => {
     socket.on('typing',      ({ receiverId }) => ss.emit(receiverId, 'user_typing',      { userId }));
     socket.on('stop_typing', ({ receiverId }) => ss.emit(receiverId, 'user_stop_typing', { userId }));
 
+    // ── Call Signaling ───────────────────────────────────────────────────────
+    socket.on('call_offer', ({ targetUserId, offer, callType, callerInfo }) => {
+      const targetSocketId = ss.onlineUsers.get(targetUserId);
+      if (targetSocketId) {
+        io.to(targetSocketId).emit('incoming_call', { fromUserId: userId, offer, callType, callerInfo });
+      } else {
+        socket.emit('call_rejected', { reason: 'offline' });
+      }
+    });
+
+    socket.on('call_answer', ({ targetUserId, answer }) => {
+      ss.emit(targetUserId, 'call_answered', { answer });
+    });
+
+    socket.on('call_reject', ({ targetUserId }) => {
+      ss.emit(targetUserId, 'call_rejected', { reason: 'rejected' });
+    });
+
+    socket.on('call_end', ({ targetUserId }) => {
+      ss.emit(targetUserId, 'call_ended', {});
+    });
+
+    socket.on('ice_candidate', ({ targetUserId, candidate }) => {
+      ss.emit(targetUserId, 'ice_candidate', { candidate });
+    });
+
     // ── Disconnect ──────────────────────────────────────────────────────────
     socket.on('disconnect', async () => {
       ss.onlineUsers.delete(userId);

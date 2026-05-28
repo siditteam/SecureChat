@@ -2,41 +2,39 @@ import { useEffect, useState, useCallback } from 'react';
 import MediaViewer from './MediaViewer';
 
 function Ticks({ status }) {
-  const color = status === 'read' ? 'text-primary-600' : 'text-gray-400';
+  const color = status === 'read' ? 'text-primary-400' : 'text-white/30';
   if (status === 'sent') return <span className={`${color} text-[11px]`}>✓</span>;
   return <span className={`${color} text-[11px]`}>✓✓</span>;
 }
 
-// ── Snap-style media card ──────────────────────────────────────────────────────
 function SnapCard({ message, isMine, localViewed, onTap }) {
   const isVideo = message.mediaType === 'video';
   const viewed = localViewed || message.mediaViewed;
   const cannotReopen = !isMine && viewed && message.viewOnce;
 
-  // Sender side — always tappable for non-viewOnce, shows status for viewOnce
   if (isMine) {
     return (
       <button
         onClick={onTap}
         className={`flex items-center gap-3 px-4 py-3 rounded-2xl w-52 transition active:scale-95 ${
           isVideo
-            ? 'bg-purple-100 hover:bg-purple-200 border border-purple-300'
-            : 'bg-primary-100 hover:bg-primary-200 border border-primary-300'
+            ? 'bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30'
+            : 'bg-primary-500/20 hover:bg-primary-500/30 border border-primary-500/30'
         }`}
       >
         <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-          isVideo ? 'bg-purple-200' : 'bg-primary-200'
+          isVideo ? 'bg-purple-500/30' : 'bg-primary-500/30'
         }`}>
           {isVideo
-            ? <VideoIcon className={`w-5 h-5 ${isVideo ? 'text-purple-600' : 'text-primary-600'}`} />
-            : <CameraIcon className="w-5 h-5 text-primary-600" />
+            ? <VideoIcon className="w-5 h-5 text-purple-300" />
+            : <CameraIcon className="w-5 h-5 text-primary-300" />
           }
         </div>
         <div className="text-left min-w-0">
-          <p className={`text-sm font-semibold ${isVideo ? 'text-purple-700' : 'text-primary-700'}`}>
+          <p className={`text-sm font-semibold ${isVideo ? 'text-purple-300' : 'text-primary-300'}`}>
             {isVideo ? 'Video' : 'Photo'}
           </p>
-          <p className="text-gray-600 text-xs truncate">
+          <p className="text-white/50 text-xs truncate">
             {message.viewOnce
               ? (viewed ? 'Opened' : 'View once · sent')
               : 'Tap to view'}
@@ -46,25 +44,23 @@ function SnapCard({ message, isMine, localViewed, onTap }) {
     );
   }
 
-  // Receiver — already opened viewOnce
   if (cannotReopen) {
     return (
-      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl w-52 bg-gray-100 border border-gray-300">
-        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl w-52 bg-white/10 border border-white/10">
+        <div className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
           {isVideo
-            ? <VideoIcon className="w-4.5 h-4.5 text-gray-600" style={{width:'18px',height:'18px'}} />
-            : <CameraIcon className="w-4.5 h-4.5 text-gray-600" style={{width:'18px',height:'18px'}} />
+            ? <VideoIcon className="w-4.5 h-4.5 text-white/50" style={{width:'18px',height:'18px'}} />
+            : <CameraIcon className="w-4.5 h-4.5 text-white/50" style={{width:'18px',height:'18px'}} />
           }
         </div>
         <div className="text-left">
-          <p className="text-gray-700 text-sm font-medium">{isVideo ? 'Video' : 'Photo'}</p>
-          <p className="text-gray-500 text-xs">Opened</p>
+          <p className="text-white/70 text-sm font-medium">{isVideo ? 'Video' : 'Photo'}</p>
+          <p className="text-white/40 text-xs">Opened</p>
         </div>
       </div>
     );
   }
 
-  // Receiver — not yet viewed (the "new snap" look)
   return (
     <button
       onClick={onTap}
@@ -90,12 +86,11 @@ function SnapCard({ message, isMine, localViewed, onTap }) {
   );
 }
 
-// ── Icon helpers ───────────────────────────────────────────────────────────────
 function CameraIcon({ className, style }) {
   return (
     <svg className={className} style={style} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0118.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
     </svg>
   );
@@ -108,14 +103,12 @@ function VideoIcon({ className, style }) {
   );
 }
 
-// ── Main Message component ─────────────────────────────────────────────────────
 export default function Message({ message, isMine }) {
   const [expired, setExpired] = useState(false);
   const [countdown, setCountdown] = useState(null);
   const [showViewer, setShowViewer] = useState(false);
   const [localViewed, setLocalViewed] = useState(false);
 
-  // Disappearing message countdown
   useEffect(() => {
     if (!message.expiresAt) return;
     const check = () => {
@@ -135,7 +128,6 @@ export default function Message({ message, isMine }) {
   const time = new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const isMedia = !!message.mediaUrl;
 
-  // ── Media message ────────────────────────────────────────────────────────────
   if (isMedia) {
     const cannotReopen = !isMine && (localViewed || message.mediaViewed) && message.viewOnce;
 
@@ -159,7 +151,7 @@ export default function Message({ message, isMine }) {
             />
 
             <div className={`flex items-center gap-1 mt-1 px-1 ${isMine ? 'justify-end' : 'justify-start'}`}>
-              <span className="text-[10px] text-gray-500">{time}</span>
+              <span className="text-[10px] text-white/30">{time}</span>
               {isMine && <Ticks status={message.deliveryStatus} />}
             </div>
           </div>
@@ -177,13 +169,12 @@ export default function Message({ message, isMine }) {
     );
   }
 
-  // ── Text message ─────────────────────────────────────────────────────────────
   return (
     <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-0.5`}>
       <div className={`relative max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm ${
-        isMine 
-          ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-br-none' 
-          : 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-900 rounded-bl-none border border-gray-300'
+        isMine
+          ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-br-none'
+          : 'bg-white/10 text-white rounded-bl-none border border-white/10 backdrop-blur-sm'
       }`}>
         {message.expiresAt && (
           <span className="absolute -top-2 -right-1 bg-error text-white text-[9px] px-1.5 py-0.5 rounded-full font-semibold">
@@ -192,7 +183,7 @@ export default function Message({ message, isMine }) {
         )}
         <p className="text-sm break-words whitespace-pre-wrap pr-14">{message.content}</p>
         <div className="absolute bottom-1.5 right-2 flex items-center gap-1">
-          <span className={`text-[10px] ${isMine ? 'text-white/70' : 'text-gray-600'}`}>{time}</span>
+          <span className={`text-[10px] ${isMine ? 'text-white/60' : 'text-white/40'}`}>{time}</span>
           {isMine && <Ticks status={message.deliveryStatus} />}
         </div>
       </div>

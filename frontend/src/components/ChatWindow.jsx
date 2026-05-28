@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import { useCall } from '../context/CallContext';
 import { decryptMessage } from '../utils/crypto';
 import Message from './Message';
 import MessageInput from './MessageInput';
@@ -27,14 +28,14 @@ function Avatar({ name, online, size = 'md' }) {
   ];
   const colorIndex = name.charCodeAt(0) % colors.length;
   const sz = size === 'sm' ? 'w-9 h-9 text-xs' : 'w-10 h-10 text-sm';
-  
+
   return (
     <div className="relative flex-shrink-0">
       <div className={`${sz} bg-gradient-to-br ${colors[colorIndex]} rounded-full flex items-center justify-center text-white font-bold shadow-md`}>
         {name[0].toUpperCase()}
       </div>
       {online && (
-        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-success rounded-full border-2 border-white" />
+        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-success rounded-full border-2 border-ink-900" />
       )}
     </div>
   );
@@ -43,6 +44,8 @@ function Avatar({ name, online, size = 'md' }) {
 export default function ChatWindow({ selectedUser, onBack }) {
   const { user } = useAuth();
   const { socket } = useSocket();
+  const { initiateCall, callState } = useCall();
+  const canCall = callState === 'idle';
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [peerOnline, setPeerOnline] = useState(false);
@@ -58,7 +61,7 @@ export default function ChatWindow({ selectedUser, onBack }) {
     const pk = privateKey();
     if (!pk) return msgs.map((m) => ({ ...m, content: m.mediaUrl ? null : '[No private key]' }));
     return Promise.all(msgs.map(async (m) => {
-      if (m.mediaUrl) return { ...m, content: null }; // media message — no text to decrypt
+      if (m.mediaUrl) return { ...m, content: null };
       try {
         const isSender = String(m.sender?._id ?? m.sender) === String(user._id);
         const content = await decryptMessage(m, isSender, pk);
@@ -69,7 +72,6 @@ export default function ChatWindow({ selectedUser, onBack }) {
     }));
   }, [privateKey, user._id]);
 
-  // Load history when chat partner changes
   useEffect(() => {
     if (!selectedUser) return;
     setMessages([]);
@@ -86,19 +88,16 @@ export default function ChatWindow({ selectedUser, onBack }) {
       .finally(() => setLoading(false));
   }, [selectedUser?._id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Mark messages read whenever this chat is open
   useEffect(() => {
     if (socket && selectedUser) {
       socket.emit('mark_read', { senderId: selectedUser._id });
     }
   }, [socket, selectedUser]);
 
-  // Auto-scroll
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, typing]);
 
-  // Socket events
   useEffect(() => {
     if (!socket || !selectedUser) return;
 
@@ -108,7 +107,6 @@ export default function ChatWindow({ selectedUser, onBack }) {
       const myId = String(user._id);
       const peerId = String(selectedUser._id);
 
-      // Only add to this chat window if it belongs here
       if (!((senderId === peerId && receiverId === myId) || (senderId === myId && receiverId === peerId))) return;
 
       const [decrypted] = await decrypt([msg]);
@@ -192,15 +190,15 @@ export default function ChatWindow({ selectedUser, onBack }) {
 
   if (!selectedUser) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 text-center gap-4">
-        <div className="w-24 h-24 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center shadow-lg">
-          <svg className="w-12 h-12 text-primary-500" fill="currentColor" viewBox="0 0 24 24">
+      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-ink-900 via-ink-800 to-ink-900 text-center gap-4">
+        <div className="w-24 h-24 bg-primary-500/20 rounded-full flex items-center justify-center shadow-lg shadow-primary-900/30">
+          <svg className="w-12 h-12 text-primary-400" fill="currentColor" viewBox="0 0 24 24">
             <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
           </svg>
         </div>
-        <h3 className="text-gray-800 text-xl font-bold">SecureChat</h3>
-        <p className="text-gray-600 text-sm">Select a conversation to start messaging</p>
-        <div className="flex items-center gap-2 text-gray-500 text-xs mt-2 bg-success/10 px-3 py-1.5 rounded-full">
+        <h3 className="text-white text-xl font-bold">SecureChat</h3>
+        <p className="text-white/50 text-sm">Select a conversation to start messaging</p>
+        <div className="flex items-center gap-2 text-white/40 text-xs mt-2 bg-success/10 px-3 py-1.5 rounded-full border border-success/20">
           <svg className="w-4 h-4 text-success" fill="currentColor" viewBox="0 0 24 24">
             <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" />
           </svg>
@@ -211,9 +209,9 @@ export default function ChatWindow({ selectedUser, onBack }) {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white min-w-0">
-      {/* Header - Modern gradient */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-400 text-white border-b border-gray-200 shadow-sm">
+    <div className="flex-1 flex flex-col bg-ink-900 min-w-0">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-primary-800 via-primary-700 to-primary-600 text-white border-b border-white/10 shadow-lg shadow-primary-950/30">
         <button
           onClick={onBack}
           className="md:hidden -ml-1 mr-1 hover:bg-white/20 p-1.5 rounded-lg transition duration-150 flex-shrink-0"
@@ -226,30 +224,54 @@ export default function ChatWindow({ selectedUser, onBack }) {
         <Avatar name={selectedUser.username} online={peerOnline} size="sm" />
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm">{selectedUser.username}</p>
-          <p className="text-xs opacity-90">
+          <p className="text-xs opacity-80">
             {typing ? '✍️ typing…' : peerOnline ? '🟢 Online' : peerLastSeen ? `Last seen ${formatLastSeen(peerLastSeen)}` : 'Offline'}
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs opacity-90 ml-auto bg-white/20 px-2 py-1 rounded-full">
-          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" />
-          </svg>
-          E2E
+        <div className="flex items-center gap-1 ml-auto">
+          <button
+            onClick={() => initiateCall(selectedUser, 'audio')}
+            disabled={!canCall}
+            title="Audio call"
+            className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/20 transition disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+          >
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+            </svg>
+          </button>
+          <button
+            onClick={() => initiateCall(selectedUser, 'video')}
+            disabled={!canCall}
+            title="Video call"
+            className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/20 transition disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+          >
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M4 6h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2z" />
+            </svg>
+          </button>
+          <div className="flex items-center gap-1.5 text-xs opacity-80 ml-1 bg-white/15 px-2 py-1 rounded-full">
+            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" />
+            </svg>
+            E2E
+          </div>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-gradient-to-b from-white to-gray-50">
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-gradient-to-b from-ink-900 to-ink-950">
         {loading && (
           <div className="flex justify-center py-8">
-            <div className="w-6 h-6 border-3 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+            <div className="w-6 h-6 border-3 border-primary-700 border-t-primary-400 rounded-full animate-spin" />
           </div>
         )}
 
         {!loading && messages.length === 0 && (
-          <div className="text-center text-gray-500 text-sm py-12">
+          <div className="text-center text-white/40 text-sm py-12">
             <p className="font-medium">No messages yet</p>
-            <p className="text-xs mt-1 text-gray-400">Say hello! 👋</p>
+            <p className="text-xs mt-1 text-white/30">Say hello! 👋</p>
           </div>
         )}
 
@@ -261,15 +283,14 @@ export default function ChatWindow({ selectedUser, onBack }) {
           />
         ))}
 
-        {/* Typing indicator */}
         {typing && (
           <div className="flex justify-start pt-1">
-            <div className="bg-gray-200 rounded-3xl rounded-bl-none px-4 py-2.5">
+            <div className="bg-white/10 backdrop-blur-sm rounded-3xl rounded-bl-none px-4 py-2.5 border border-white/10">
               <div className="flex gap-1.5 items-center">
                 {[0, 150, 300].map((delay) => (
                   <span
                     key={delay}
-                    className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
+                    className="w-2 h-2 bg-white/40 rounded-full animate-bounce"
                     style={{ animationDelay: `${delay}ms` }}
                   />
                 ))}

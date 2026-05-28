@@ -9,13 +9,13 @@ function ToggleRow({ label, description, checked, onChange }) {
   return (
     <div className="flex items-center justify-between px-5 py-4">
       <div className="flex-1 min-w-0 pr-4">
-        <p className="text-sm font-medium text-gray-900">{label}</p>
-        <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+        <p className="text-sm font-medium text-white">{label}</p>
+        <p className="text-xs text-white/50 mt-0.5">{description}</p>
       </div>
       <button
         onClick={() => onChange(!checked)}
         className={`relative flex-shrink-0 w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none ${
-          checked ? 'bg-primary-500' : 'bg-gray-300'
+          checked ? 'bg-primary-500' : 'bg-white/20'
         }`}
       >
         <span
@@ -30,7 +30,7 @@ function ToggleRow({ label, description, checked, onChange }) {
 
 function SectionCard({ children }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+    <div className="bg-white/[0.05] backdrop-blur-xl rounded-2xl border border-white/10 divide-y divide-white/10">
       {children}
     </div>
   );
@@ -39,8 +39,8 @@ function SectionCard({ children }) {
 function InfoRow({ label, value }) {
   return (
     <div className="px-5 py-4 flex justify-between items-center gap-3">
-      <span className="text-sm text-gray-500 flex-shrink-0">{label}</span>
-      <span className="text-sm font-medium text-gray-900 text-right break-all">{value || '—'}</span>
+      <span className="text-sm text-white/50 flex-shrink-0">{label}</span>
+      <span className="text-sm font-medium text-white text-right break-all">{value || '—'}</span>
     </div>
   );
 }
@@ -125,12 +125,11 @@ export default function Settings() {
   };
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
+    <div className="h-screen bg-ink-900 flex flex-col overflow-hidden">
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-400 text-white shadow-md flex-shrink-0">
+      <div className="bg-gradient-to-r from-primary-800 via-primary-700 to-primary-600 text-white shadow-md flex-shrink-0">
         <div className="max-w-4xl mx-auto flex items-center gap-3 px-4 py-4">
-          {/* Desktop + mobile-nav-view: back to chats */}
           <button
             onClick={() => navigate('/')}
             className={`${mobileShowContent ? 'hidden md:flex' : 'flex'} items-center justify-center hover:bg-white/20 p-2 rounded-xl transition flex-shrink-0`}
@@ -140,7 +139,6 @@ export default function Settings() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          {/* Mobile content-view only: back to nav list */}
           <button
             onClick={() => setMobileShowContent(false)}
             className={`${mobileShowContent ? 'flex md:hidden' : 'hidden'} items-center justify-center hover:bg-white/20 p-2 rounded-xl transition flex-shrink-0`}
@@ -166,45 +164,45 @@ export default function Settings() {
 
       <div className="flex flex-1 max-w-4xl mx-auto w-full overflow-hidden">
 
-        {/* Nav list — full-width on mobile, sidebar on desktop */}
-        <aside className={`${mobileShowContent ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-52 flex-shrink-0 bg-white md:border-r border-gray-200 overflow-y-auto`}>
+        {/* Nav sidebar */}
+        <aside className={`${mobileShowContent ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-52 flex-shrink-0 bg-ink-800/60 backdrop-blur-xl md:border-r border-white/10 overflow-y-auto`}>
           {NAV.map((item) => (
             <button
               key={item.id}
               onClick={() => handleNavClick(item.id)}
-              className={`w-full flex items-center gap-3 px-5 py-4 md:px-4 md:py-3 text-sm font-medium transition border-b border-gray-100 ${
+              className={`w-full flex items-center gap-3 px-5 py-4 md:px-4 md:py-3 text-sm font-medium transition border-b border-white/[0.06] ${
                 section === item.id
-                  ? 'text-primary-600 md:bg-primary-50 md:border-r-2 md:border-primary-500'
-                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'text-primary-300 md:bg-primary-500/20 md:border-r-2 md:border-primary-400'
+                  : 'text-white/60 hover:bg-white/5 hover:text-white'
               }`}
             >
               <svg className="w-5 h-5 md:w-4 md:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
               </svg>
               <span className="flex-1 text-left">{item.label}</span>
-              <svg className="w-4 h-4 text-gray-300 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-white/20 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
           ))}
         </aside>
 
-        {/* Content — hidden on mobile until nav item tapped */}
+        {/* Content */}
         <main className={`${mobileShowContent ? 'flex' : 'hidden md:flex'} flex-1 flex-col overflow-y-auto`}>
           <div className="p-4 md:p-6">
 
             {/* ── Profile ── */}
             {section === 'profile' && (
               <div className="max-w-lg space-y-5">
-                <h2 className="text-xl font-bold text-gray-900 hidden md:block">Profile</h2>
+                <h2 className="text-xl font-bold text-white hidden md:block">Profile</h2>
 
                 <SectionCard>
                   <div className="px-5 py-5 flex items-center gap-5">
                     <div className="relative flex-shrink-0">
                       {avatarUrl
-                        ? <img src={avatarUrl} alt="" className="w-20 h-20 rounded-full object-cover ring-4 ring-primary-100" />
+                        ? <img src={avatarUrl} alt="" className="w-20 h-20 rounded-full object-cover ring-4 ring-primary-500/30" />
                         : (
-                          <div className="w-20 h-20 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white text-3xl font-bold ring-4 ring-primary-100">
+                          <div className="w-20 h-20 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white text-3xl font-bold ring-4 ring-primary-500/20">
                             {user?.username?.[0]?.toUpperCase()}
                           </div>
                         )
@@ -218,7 +216,7 @@ export default function Settings() {
                         {avatarUploading
                           ? <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                           : <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0118.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                         }
@@ -226,8 +224,8 @@ export default function Settings() {
                       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={uploadAvatar} />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-bold text-gray-900 text-lg truncate">{user?.username}</p>
-                      <p className="text-gray-500 text-sm mt-0.5">{user?.phone}</p>
+                      <p className="font-bold text-white text-lg truncate">{user?.username}</p>
+                      <p className="text-white/50 text-sm mt-0.5">{user?.phone}</p>
                       {user?.avatar && (
                         <button onClick={removeAvatar} className="text-xs text-error hover:underline mt-1">
                           Remove photo
@@ -239,22 +237,22 @@ export default function Settings() {
 
                 <SectionCard>
                   <div className="px-5 py-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">About / Bio</label>
+                    <label className="block text-sm font-semibold text-white/80 mb-2">About / Bio</label>
                     <textarea
                       value={bio}
                       onChange={(e) => setBio(e.target.value.slice(0, 150))}
                       placeholder="A short bio visible to your friends…"
                       rows={3}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 resize-none transition"
+                      className="w-full bg-white/10 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/30 outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500/50 resize-none transition"
                     />
-                    <p className="text-xs text-gray-400 text-right mt-1">{bio.length}/150</p>
+                    <p className="text-xs text-white/30 text-right mt-1">{bio.length}/150</p>
                   </div>
                 </SectionCard>
 
                 <button
                   onClick={saveProfile}
                   disabled={saving}
-                  className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white py-3 rounded-xl font-semibold shadow-md transition disabled:opacity-60"
+                  className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white py-3 rounded-xl font-semibold shadow-md shadow-primary-900/40 transition disabled:opacity-60"
                 >
                   {saving ? 'Saving…' : 'Save Changes'}
                 </button>
@@ -264,7 +262,7 @@ export default function Settings() {
             {/* ── Account ── */}
             {section === 'account' && (
               <div className="max-w-lg space-y-5">
-                <h2 className="text-xl font-bold text-gray-900 hidden md:block">Account</h2>
+                <h2 className="text-xl font-bold text-white hidden md:block">Account</h2>
 
                 <SectionCard>
                   <InfoRow label="Username" value={`@${user?.username}`} />
@@ -275,18 +273,18 @@ export default function Settings() {
                   />
                   {user?.isAdmin && (
                     <div className="px-5 py-4 flex justify-between items-center">
-                      <span className="text-sm text-gray-500">Role</span>
-                      <span className="text-xs bg-primary-100 text-primary-700 font-semibold px-2.5 py-1 rounded-full">Admin</span>
+                      <span className="text-sm text-white/50">Role</span>
+                      <span className="text-xs bg-primary-500/20 text-primary-300 font-semibold px-2.5 py-1 rounded-full">Admin</span>
                     </div>
                   )}
                 </SectionCard>
 
                 <SectionCard>
                   <div className="px-5 py-4">
-                    <p className="text-sm font-semibold text-gray-700 mb-1">Encryption keys</p>
-                    <p className="text-xs text-gray-500 mb-3">Your private key is stored only on this device. If you log in on a new device, a new key pair will be generated.</p>
-                    <div className="bg-gray-50 rounded-lg px-3 py-2">
-                      <p className="text-[10px] font-mono text-gray-500 break-all">
+                    <p className="text-sm font-semibold text-white/80 mb-1">Encryption keys</p>
+                    <p className="text-xs text-white/50 mb-3">Your private key is stored only on this device. If you log in on a new device, a new key pair will be generated.</p>
+                    <div className="bg-white/[0.04] rounded-lg px-3 py-2 border border-white/10">
+                      <p className="text-[10px] font-mono text-white/40 break-all">
                         {localStorage.getItem('privateKey') ? 'Private key present on this device ✓' : 'No private key on this device'}
                       </p>
                     </div>
@@ -305,7 +303,7 @@ export default function Settings() {
             {/* ── Privacy ── */}
             {section === 'privacy' && (
               <div className="max-w-lg space-y-5">
-                <h2 className="text-xl font-bold text-gray-900 hidden md:block">Privacy</h2>
+                <h2 className="text-xl font-bold text-white hidden md:block">Privacy</h2>
 
                 <SectionCard>
                   <ToggleRow
@@ -325,7 +323,7 @@ export default function Settings() {
                 <button
                   onClick={savePrivacy}
                   disabled={saving}
-                  className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white py-3 rounded-xl font-semibold shadow-md transition disabled:opacity-60"
+                  className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white py-3 rounded-xl font-semibold shadow-md shadow-primary-900/40 transition disabled:opacity-60"
                 >
                   {saving ? 'Saving…' : 'Save Changes'}
                 </button>
@@ -335,22 +333,22 @@ export default function Settings() {
             {/* ── Security ── */}
             {section === 'security' && (
               <div className="max-w-lg space-y-5">
-                <h2 className="text-xl font-bold text-gray-900 hidden md:block">Security</h2>
+                <h2 className="text-xl font-bold text-white hidden md:block">Security</h2>
 
                 <SectionCard>
                   <div className="px-5 py-5">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                         </svg>
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900 text-sm">End-to-End Encrypted</p>
-                        <p className="text-xs text-green-600">All messages are E2EE</p>
+                        <p className="font-semibold text-white text-sm">End-to-End Encrypted</p>
+                        <p className="text-xs text-green-400">All messages are E2EE</p>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-500 leading-relaxed">
+                    <p className="text-sm text-white/50 leading-relaxed">
                       SecureChat uses RSA-OAEP (2048-bit) + AES-GCM (256-bit) encryption. Your private key never leaves this device — not even the server can read your messages.
                     </p>
                   </div>
@@ -358,10 +356,10 @@ export default function Settings() {
 
                 <SectionCard>
                   <div className="px-5 py-4">
-                    <p className="text-sm font-semibold text-gray-700 mb-2">Your public key</p>
-                    <p className="text-xs text-gray-500 mb-2">Share this fingerprint to verify your identity with friends.</p>
-                    <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
-                      <p className="font-mono text-[11px] text-gray-600 break-all leading-relaxed">
+                    <p className="text-sm font-semibold text-white/80 mb-2">Your public key</p>
+                    <p className="text-xs text-white/50 mb-2">Share this fingerprint to verify your identity with friends.</p>
+                    <div className="bg-white/[0.04] rounded-xl p-3 border border-white/10">
+                      <p className="font-mono text-[11px] text-white/40 break-all leading-relaxed">
                         {user?.publicKey ? user.publicKey.slice(0, 120) + '…' : 'Key not available'}
                       </p>
                     </div>
@@ -370,8 +368,8 @@ export default function Settings() {
 
                 <SectionCard>
                   <div className="px-5 py-4">
-                    <p className="text-sm font-semibold text-gray-700 mb-1">Active session</p>
-                    <p className="text-xs text-gray-500">Logged in on this device. Log out to end this session. Each device gets its own encryption key pair.</p>
+                    <p className="text-sm font-semibold text-white/80 mb-1">Active session</p>
+                    <p className="text-xs text-white/50">Logged in on this device. Log out to end this session. Each device gets its own encryption key pair.</p>
                   </div>
                 </SectionCard>
               </div>
@@ -380,7 +378,7 @@ export default function Settings() {
             {/* ── Notifications ── */}
             {section === 'notifications' && (
               <div className="max-w-lg space-y-5">
-                <h2 className="text-xl font-bold text-gray-900 hidden md:block">Notifications</h2>
+                <h2 className="text-xl font-bold text-white hidden md:block">Notifications</h2>
 
                 <SectionCard>
                   <ToggleRow
@@ -391,14 +389,14 @@ export default function Settings() {
                   />
                 </SectionCard>
 
-                <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 text-sm text-yellow-800">
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl px-4 py-3 text-sm text-yellow-300">
                   Browser notifications require permission from your browser. You may be prompted to allow notifications.
                 </div>
 
                 <button
                   onClick={savePrivacy}
                   disabled={saving}
-                  className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white py-3 rounded-xl font-semibold shadow-md transition disabled:opacity-60"
+                  className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white py-3 rounded-xl font-semibold shadow-md shadow-primary-900/40 transition disabled:opacity-60"
                 >
                   {saving ? 'Saving…' : 'Save Changes'}
                 </button>
@@ -408,16 +406,16 @@ export default function Settings() {
             {/* ── About ── */}
             {section === 'about' && (
               <div className="max-w-lg space-y-5">
-                <h2 className="text-xl font-bold text-gray-900 hidden md:block">About SecureChat</h2>
+                <h2 className="text-xl font-bold text-white hidden md:block">About SecureChat</h2>
 
-                <div className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl p-6 text-white text-center shadow-lg">
+                <div className="bg-gradient-to-br from-primary-600 to-primary-800 rounded-2xl p-6 text-white text-center shadow-lg shadow-primary-950/50">
                   <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
                     <svg className="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
                   </div>
                   <h3 className="text-xl font-bold mb-1">SecureChat</h3>
-                  <p className="text-white/80 text-sm">Version 1.0.0</p>
+                  <p className="text-white/70 text-sm">Version 1.0.0</p>
                 </div>
 
                 <SectionCard>
@@ -429,8 +427,8 @@ export default function Settings() {
 
                 <SectionCard>
                   <div className="px-5 py-4">
-                    <p className="text-sm font-semibold text-gray-700 mb-2">Privacy promise</p>
-                    <p className="text-sm text-gray-500 leading-relaxed">
+                    <p className="text-sm font-semibold text-white/80 mb-2">Privacy promise</p>
+                    <p className="text-sm text-white/50 leading-relaxed">
                       SecureChat is built with privacy first. All messages are end-to-end encrypted — only you and the person you're talking to can read them. We cannot access your messages, even if compelled to.
                     </p>
                   </div>
