@@ -20,8 +20,21 @@ const app = express();
 const server = http.createServer(app);
 
 const ALLOWED_ORIGINS = process.env.FRONTEND_URL
-  ? [process.env.FRONTEND_URL.replace(/\/$/, '')]
+  ? process.env.FRONTEND_URL.split(',').map(u => u.trim().replace(/\/$/, ''))
   : ['http://localhost:5173', 'http://10.0.0.156:5173'];
+
+console.log('CORS allowed origins:', ALLOWED_ORIGINS);
+
+const corsOptions = {
+  origin: (origin, cb) => {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    console.warn('CORS blocked origin:', origin);
+    cb(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
 
 const io = new Server(server, {
   cors: {
@@ -32,10 +45,8 @@ const io = new Server(server, {
 });
 
 app.use(helmet());
-app.use(cors({
-  origin: ALLOWED_ORIGINS,
-  credentials: true,
-}));
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 
 // Stricter rate limit on auth endpoints
