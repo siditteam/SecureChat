@@ -20,7 +20,7 @@ const app = express();
 const server = http.createServer(app);
 
 const ALLOWED_ORIGINS = process.env.FRONTEND_URL
-  ? [process.env.FRONTEND_URL]
+  ? [process.env.FRONTEND_URL.replace(/\/$/, '')]
   : ['http://localhost:5173', 'http://10.0.0.156:5173'];
 
 const io = new Server(server, {
