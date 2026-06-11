@@ -1,0 +1,17 @@
+<svg width="3000" height="900" viewBox="0 0 3000 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="3000" height="900" rx="170" fill="#111111"/>
+  <g transform="translate(160,105) scale(0.43)">
+    <rect width="1600" height="1600" rx="360" fill="#FEEE05"/>
+    <circle cx="800" cy="800" r="505" stroke="#111111" stroke-width="54" stroke-linecap="round" stroke-dasharray="710 96 220 96"/>
+    <path d="M470 560C470 462.798 548.798 384 646 384H956C1053.2 384 1132 462.798 1132 560V795C1132 892.202 1053.2 971 956 971H801.5L599.5 1125C567.613 1149.3 522 1126.56 522 1086.47V939.5C490.313 907.805 470 864.051 470 795V560Z" fill="#111111"/>
+    <path d="M608 589C608 528.801 656.801 480 717 480H885C945.199 480 994 528.801 994 589V704C994 828.5 894.5 893.5 801 929C707.5 893.5 608 828.5 608 704V589Z" fill="#FEEE05"/>
+    <path d="M715 606H888" stroke="#111111" stroke-width="58" stroke-linecap="round"/>
+    <path d="M801 606V795" stroke="#111111" stroke-width="58" stroke-linecap="round"/>
+    <path d="M908 734C889.5 791.5 840.5 826 781 818C714 809 666 752 674 686C682 620 738 574 803 581" stroke="#111111" stroke-width="54" stroke-linecap="round"/>
+    <circle cx="1124" cy="426" r="70" fill="#111111"/>
+    <circle cx="1124" cy="426" r="25" fill="#FEEE05"/>
+  </g>
+  <text x="940" y="410" font-family="Arial, Helvetica, sans-serif" font-size="230" font-weight="900" letter-spacing="-10" fill="#FEEE05">UNDDR</text>
+  <text x="948" y="540" font-family="Arial, Helvetica, sans-serif" font-size="60" font-weight="400" letter-spacing="1" fill="#FFFFFF">Invite-only. Underground. Encrypted.</text>
+  <text x="950" y="628" font-family="Arial, Helvetica, sans-serif" font-size="36" font-weight="500" letter-spacing="6" fill="#FEEE05">UNDDRGROUND.COM</text>
+</svg>

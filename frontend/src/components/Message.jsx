@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import MediaViewer from './MediaViewer';
 
 function Ticks({ status }) {
-  const color = status === 'read' ? 'text-primary-400' : 'text-white/30';
+  const color = status === 'read' ? 'text-success' : 'text-ink-950/50';
   if (status === 'sent') return <span className={`${color} text-[11px]`}>✓</span>;
   return <span className={`${color} text-[11px]`}>✓✓</span>;
 }
@@ -11,6 +11,7 @@ function SnapCard({ message, isMine, localViewed, onTap }) {
   const isVideo = message.mediaType === 'video';
   const viewed = localViewed || message.mediaViewed;
   const cannotReopen = !isMine && viewed && message.viewOnce;
+  const secureLabel = message.viewOnce ? 'Secure image · view once' : isVideo ? 'Secure video' : 'Secure image';
 
   if (isMine) {
     return (
@@ -31,6 +32,11 @@ function SnapCard({ message, isMine, localViewed, onTap }) {
           }
         </div>
         <div className="text-left min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[10px] uppercase tracking-[0.24em] font-semibold text-white/60">
+              {secureLabel}
+            </span>
+          </div>
           <p className={`text-sm font-semibold ${isVideo ? 'text-purple-300' : 'text-primary-300'}`}>
             {isVideo ? 'Video' : 'Photo'}
           </p>
@@ -54,6 +60,11 @@ function SnapCard({ message, isMine, localViewed, onTap }) {
           }
         </div>
         <div className="text-left">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[10px] uppercase tracking-[0.24em] font-semibold text-white/60">
+              {secureLabel}
+            </span>
+          </div>
           <p className="text-white/70 text-sm font-medium">{isVideo ? 'Video' : 'Photo'}</p>
           <p className="text-white/40 text-xs">Opened</p>
         </div>
@@ -129,6 +140,7 @@ export default function Message({ message, isMine }) {
   const isMedia = !!message.mediaUrl;
 
   if (isMedia) {
+    if (!isMine && message.viewOnce && (localViewed || message.mediaViewed)) return null;
     const cannotReopen = !isMine && (localViewed || message.mediaViewed) && message.viewOnce;
 
     return (
@@ -150,8 +162,15 @@ export default function Message({ message, isMine }) {
               }}
             />
 
-            <div className={`flex items-center gap-1 mt-1 px-1 ${isMine ? 'justify-end' : 'justify-start'}`}>
-              <span className="text-[10px] text-white/30">{time}</span>
+            <div className={`flex flex-col gap-1 mt-1 px-1 ${isMine ? 'items-end' : 'items-start'}`}>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-white/30">{time}</span>
+                {(message.expiresAt || message.viewOnce) && (
+                  <span className="text-[10px] text-white/80 bg-white/10 rounded-full px-2 py-0.5 uppercase tracking-[0.12em]">
+                    {message.viewOnce ? 'View once' : 'Disappears soon'}
+                  </span>
+                )}
+              </div>
               {isMine && <Ticks status={message.deliveryStatus} />}
             </div>
           </div>
@@ -173,7 +192,7 @@ export default function Message({ message, isMine }) {
     <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-0.5`}>
       <div className={`relative max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm ${
         isMine
-          ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-br-none'
+          ? 'bg-primary-500 text-ink-950 rounded-br-none'
           : 'bg-white/10 text-white rounded-bl-none border border-white/10 backdrop-blur-sm'
       }`}>
         {message.expiresAt && (
@@ -183,7 +202,7 @@ export default function Message({ message, isMine }) {
         )}
         <p className="text-sm break-words whitespace-pre-wrap pr-14">{message.content}</p>
         <div className="absolute bottom-1.5 right-2 flex items-center gap-1">
-          <span className={`text-[10px] ${isMine ? 'text-white/60' : 'text-white/40'}`}>{time}</span>
+          <span className={`text-[10px] ${isMine ? 'text-ink-950/60' : 'text-white/40'}`}>{time}</span>
           {isMine && <Ticks status={message.deliveryStatus} />}
         </div>
       </div>

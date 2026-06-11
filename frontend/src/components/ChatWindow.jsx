@@ -35,7 +35,7 @@ function Avatar({ name, online, size = 'md' }) {
         {name[0].toUpperCase()}
       </div>
       {online && (
-        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-success rounded-full border-2 border-ink-900" />
+        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-success rounded-full" style={{ border: '2px solid var(--bg-surface)' }} />
       )}
     </div>
   );
@@ -190,28 +190,27 @@ export default function ChatWindow({ selectedUser, onBack }) {
 
   if (!selectedUser) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-ink-900 via-ink-800 to-ink-900 text-center gap-4">
-        <div className="w-24 h-24 bg-primary-500/20 rounded-full flex items-center justify-center shadow-lg shadow-primary-900/30">
-          <svg className="w-12 h-12 text-primary-400" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
-          </svg>
-        </div>
-        <h3 className="text-white text-xl font-bold">SecureChat</h3>
-        <p className="text-white/50 text-sm">Select a conversation to start messaging</p>
-        <div className="flex items-center gap-2 text-white/40 text-xs mt-2 bg-success/10 px-3 py-1.5 rounded-full border border-success/20">
-          <svg className="w-4 h-4 text-success" fill="currentColor" viewBox="0 0 24 24">
+      <div className="flex-1 flex flex-col items-center justify-center text-center gap-5 px-6" style={{ background: 'linear-gradient(180deg, var(--bg-deep), var(--bg-muted))', color: 'var(--text-secondary)' }}>
+        <img
+          src="/assets/logo-unddr-teal.svg"
+          alt="Unddr"
+          style={{ width: 280, maxWidth: '90%', height: 'auto' }}
+        />
+        <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Select a conversation to start messaging</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--success)', fontSize: 12, background: 'rgba(22,163,74,0.06)', padding: '6px 12px', borderRadius: 999, border: '1px solid rgba(22,163,74,0.12)' }}>
+          <svg style={{ width: 16, height: 16, color: 'var(--success)' }} fill="currentColor" viewBox="0 0 24 24">
             <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" />
           </svg>
-          End-to-end encrypted
+          <span style={{ color: 'var(--text-secondary)' }}>End-to-end encrypted</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-ink-900 min-w-0">
+    <div className="flex-1 flex flex-col min-w-0" style={{ background: 'var(--bg-surface)' }}>
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-primary-800 via-primary-700 to-primary-600 text-white border-b border-white/10 shadow-lg shadow-primary-950/30">
+      <div className="flex items-center gap-3 px-4 py-3" style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--card-border)', color: 'var(--text-primary)' }}>
         <button
           onClick={onBack}
           className="md:hidden -ml-1 mr-1 hover:bg-white/20 p-1.5 rounded-lg transition duration-150 flex-shrink-0"
@@ -223,8 +222,8 @@ export default function ChatWindow({ selectedUser, onBack }) {
         </button>
         <Avatar name={selectedUser.username} online={peerOnline} size="sm" />
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm">{selectedUser.username}</p>
-          <p className="text-xs opacity-80">
+          <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>{selectedUser.username}</p>
+          <p style={{ fontSize: 12, opacity: 0.85, color: 'var(--text-secondary)' }}>
             {typing ? '✍️ typing…' : peerOnline ? '🟢 Online' : peerLastSeen ? `Last seen ${formatLastSeen(peerLastSeen)}` : 'Offline'}
           </p>
         </div>
@@ -235,7 +234,7 @@ export default function ChatWindow({ selectedUser, onBack }) {
             title="Audio call"
             className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/20 transition disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
           >
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" style={{ color: 'var(--text-primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
             </svg>
@@ -251,17 +250,17 @@ export default function ChatWindow({ selectedUser, onBack }) {
                 d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M4 6h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2z" />
             </svg>
           </button>
-          <div className="flex items-center gap-1.5 text-xs opacity-80 ml-1 bg-white/15 px-2 py-1 rounded-full">
-            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, opacity: 0.85, marginLeft: 8, padding: '6px 10px', borderRadius: 999, background: 'rgba(10,163,163,0.06)' }}>
+            <svg style={{ width: 14, height: 14, color: 'var(--accent)' }} fill="currentColor" viewBox="0 0 24 24">
               <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" />
             </svg>
-            E2E
+            <span style={{ color: 'var(--text-secondary)' }}>E2E</span>
           </div>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-gradient-to-b from-ink-900 to-ink-950">
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2" style={{ background: 'linear-gradient(180deg, var(--bg-deep), var(--bg-muted))' }}>
         {loading && (
           <div className="flex justify-center py-8">
             <div className="w-6 h-6 border-3 border-primary-700 border-t-primary-400 rounded-full animate-spin" />
@@ -269,9 +268,9 @@ export default function ChatWindow({ selectedUser, onBack }) {
         )}
 
         {!loading && messages.length === 0 && (
-          <div className="text-center text-white/40 text-sm py-12">
+          <div className="text-center text-sm py-12" style={{ color: 'var(--text-secondary)' }}>
             <p className="font-medium">No messages yet</p>
-            <p className="text-xs mt-1 text-white/30">Say hello! 👋</p>
+            <p className="text-xs mt-1" style={{ opacity: 0.6 }}>Say hello! 👋</p>
           </div>
         )}
 
@@ -285,13 +284,12 @@ export default function ChatWindow({ selectedUser, onBack }) {
 
         {typing && (
           <div className="flex justify-start pt-1">
-            <div className="bg-white/10 backdrop-blur-sm rounded-3xl rounded-bl-none px-4 py-2.5 border border-white/10">
-              <div className="flex gap-1.5 items-center">
+            <div style={{ background: 'rgba(15,23,36,0.06)', backdropFilter: 'blur(6px)', borderRadius: 999, padding: '8px 14px', border: '1px solid rgba(15,23,36,0.06)' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 {[0, 150, 300].map((delay) => (
                   <span
                     key={delay}
-                    className="w-2 h-2 bg-white/40 rounded-full animate-bounce"
-                    style={{ animationDelay: `${delay}ms` }}
+                    style={{ width: 8, height: 8, background: 'rgba(15,23,36,0.18)', borderRadius: 999, display: 'inline-block', animation: `bounce 900ms infinite`, animationDelay: `${delay}ms` }}
                   />
                 ))}
               </div>

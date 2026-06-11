@@ -28,6 +28,19 @@ const userSchema = new mongoose.Schema({
     readReceipts: { type: Boolean, default: true },
     notifications: { type: Boolean, default: true },
   },
+  pushSubscription: { type: String, default: null },
+  // Invite / probation system
+  inviteTokens:    { type: Number, default: 0 },
+  probationEndsAt: { type: Date, default: null },
+  invitedBy:       { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  accountStatus:   { type: String, enum: ['probation', 'active', 'warned', 'suspended', 'removed', 'appealing'], default: 'probation' },
+  // Moderation
+  removalReason:      { type: String, default: null },
+  removedAt:          { type: Date, default: null },
+  hasAppealed:        { type: Boolean, default: false },
+  appealMessage:      { type: String, default: null },
+  appealSubmittedAt:  { type: Date, default: null },
+  blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 }, { timestamps: true });
 
 userSchema.methods.toPublicJSON = function () {
@@ -44,6 +57,12 @@ userSchema.methods.toPublicJSON = function () {
     isBanned: this.isBanned,
     settings: this.settings,
     createdAt: this.createdAt,
+    inviteTokens: this.inviteTokens,
+    probationEndsAt: this.probationEndsAt,
+    invitedBy: this.invitedBy,
+    accountStatus: this.accountStatus,
+    hasAppealed: this.hasAppealed,
+    removalReason: this.removalReason,
   };
 };
 

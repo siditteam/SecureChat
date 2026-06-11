@@ -4,6 +4,9 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import QRModal from './QRModal';
+import QRScanner from './QRScanner';
+import ConfirmModal from './ConfirmModal';
+import { useToast } from '../context/ToastContext';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -34,7 +37,7 @@ function Avatar({ name, online, size = 'md', avatarFile = null }) {
           </div>
       }
       {online && (
-        <span className="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-ink-900 shadow-sm" />
+        <span className="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full shadow-sm" style={{ border: '2px solid var(--bg-surface)' }} />
       )}
     </div>
   );
@@ -53,11 +56,11 @@ function TabButton({ label, active, badge, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`relative flex-1 py-2.5 text-sm font-semibold transition duration-200 rounded-lg ${
-        active
-          ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-md shadow-primary-900/40'
-          : 'text-white/60 hover:bg-white/10'
-      }`}
+      className="relative flex-1 py-2.5 text-sm font-semibold transition duration-200 rounded-lg"
+      style={{
+        background: active ? 'var(--accent)' : 'transparent',
+        color: active ? '#fff' : 'var(--text-secondary)',
+      }}
     >
       {label}
       {badge > 0 && (
@@ -69,30 +72,86 @@ function TabButton({ label, active, badge, onClick }) {
   );
 }
 
-function FriendRow({ u, online, lastSeen, action, onAction, onMessage, isSelected, onSelect }) {
+function FriendRow({ u, online, lastSeen, action, onAction, onMessage, isSelected, onSelect, onRemove, onBlock, onViewProfile, onReport }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <div
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mx-1 transition duration-150 ${
-        isSelected
-          ? 'bg-primary-500/20 border-l-2 border-primary-400'
-          : 'hover:bg-white/5'
-      }`}
+      className="relative flex items-center gap-3 px-3 py-2.5 rounded-lg mx-1 transition duration-150"
+      style={{
+        background: isSelected ? 'rgba(10,163,163,0.08)' : 'transparent',
+        borderLeft: isSelected ? '2px solid var(--accent)' : '2px solid transparent',
+      }}
     >
-      <button className="flex items-center gap-3 flex-1 min-w-0 text-left" onClick={onSelect}>
+      <button type="button" className="flex items-center gap-3 flex-1 min-w-0 text-left" onClick={onSelect}>
         <Avatar name={u.username} online={online} avatarFile={u.avatar} />
         <div className="min-w-0">
-          <p className="text-white text-sm font-semibold truncate">{u.username}</p>
-          <p className="text-white/50 text-xs truncate">
-            {online ? '🟢 Online' : lastSeen ? `Last seen ${formatSeen(lastSeen)}` : ''}
+          <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{u.username}</p>
+          <p className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>
+            {online ? <span><span style={{ color: '#10b981' }}>●</span> Online</span> : lastSeen ? `Last seen ${formatSeen(lastSeen)}` : ''}
           </p>
         </div>
       </button>
 
-      <div className="flex-shrink-0 flex gap-1">
+      <div className="flex-shrink-0 flex items-center gap-1.5">
+        {/* Inline accept/decline for incoming requests */}
+        {action === 'incoming' && (
+          <>
+            <button
+              type="button"
+              onClick={() => onAction?.('accept')}
+              className="flex items-center gap-1 px-2.5 py-1.5 bg-success/20 text-success hover:bg-success/30 rounded-lg text-xs font-semibold transition"
+              title="Accept"
+            >
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+              Accept
+            </button>
+            <button
+              type="button"
+              onClick={() => onAction?.('reject')}
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-white/30 bg-white/5 hover:bg-error/20 hover:text-error transition"
+              title="Decline"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </>
+        )}
+
+        {/* Withdraw button for sent requests */}
+        {action === 'pending' && (
+          <button
+            type="button"
+            onClick={() => onAction?.()}
+            className="px-2.5 py-1 rounded-lg text-xs font-medium bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/60 border border-white/10 transition"
+            title="Withdraw request"
+          >
+            Withdraw
+          </button>
+        )}
+
+        {/* Add friend button */}
+        {action === 'add' && (
+          <button
+            type="button"
+            onClick={() => onAction?.()}
+            className="px-2.5 py-1.5 rounded-lg text-xs font-bold transition shadow-sm"
+            style={{ background: 'var(--accent)', color: '#fff' }}
+            title="Send friend request"
+          >
+            Add
+          </button>
+        )}
+
+        {/* Message icon (friends only) */}
         {action === 'message' && onMessage && (
           <button
+            type="button"
             onClick={onMessage}
-            className="text-primary-400 hover:bg-primary-500/20 p-1.5 rounded-lg transition duration-150"
+            className="text-primary-500 hover:bg-primary-500/20 p-1.5 rounded-lg transition duration-150"
             title="Message"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -100,21 +159,28 @@ function FriendRow({ u, online, lastSeen, action, onAction, onMessage, isSelecte
             </svg>
           </button>
         )}
-        {action === 'add' && (
-          <button
-            onClick={onAction}
-            className="text-xs bg-primary-500/20 text-primary-300 hover:bg-primary-500/30 px-2.5 py-1 rounded-lg font-semibold transition duration-150"
-          >
-            Add
-          </button>
-        )}
-        {action === 'pending' && (
-          <span className="text-xs text-white/50 bg-white/10 px-2.5 py-1 rounded-lg">Sent</span>
-        )}
-        {action === 'incoming' && (
+
+        {/* 3-dot menu — only for accepted friends */}
+        {action === 'message' && (
           <>
-            <button onClick={() => onAction('accept')} className="text-xs bg-success text-white hover:bg-green-600 px-2.5 py-1 rounded-lg font-semibold transition duration-150">✓</button>
-            <button onClick={() => onAction('reject')} className="text-xs bg-error/10 text-error hover:bg-error/20 px-2.5 py-1 rounded-lg transition duration-150">✕</button>
+            <button
+              type="button"
+              onClick={() => setMenuOpen((s) => !s)}
+              className="p-2.5 rounded-xl text-white/60 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+              title="More options"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v.01M12 12v.01M12 18v.01" />
+              </svg>
+            </button>
+            {menuOpen && (
+              <div className="absolute top-full mt-2 right-3 left-3 sm:left-auto sm:right-3 w-auto sm:w-40 max-w-[calc(100%-1.5rem)] rounded-lg shadow-lg z-50" style={{ background: 'var(--bg-surface)', border: '1px solid var(--card-border)' }}>
+                <button onClick={() => { setMenuOpen(false); onViewProfile?.(); }} className="w-full text-left px-3 py-2 text-sm" style={{ color: 'var(--text-primary)' }}>View profile</button>
+                {onRemove && <button onClick={() => { setMenuOpen(false); onRemove?.(u._id); }} className="w-full text-left px-3 py-2 text-sm" style={{ color: 'var(--text-primary)' }}>Remove</button>}
+                {onBlock && <button onClick={() => { setMenuOpen(false); onBlock?.(u._id); }} className="w-full text-left px-3 py-2 text-sm text-error">Block</button>}
+                {onReport && <button onClick={() => { setMenuOpen(false); onReport?.(u); }} className="w-full text-left px-3 py-2 text-sm text-warning">Report</button>}
+              </div>
+            )}
           </>
         )}
       </div>
@@ -129,6 +195,12 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
 
   const [tab, setTab] = useState('chats');
   const [showQR, setShowQR] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+  const [reportTarget, setReportTarget] = useState(null);
+  const [reportReason, setReportReason] = useState('hostile');
+  const [reportDesc, setReportDesc] = useState('');
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportDone, setReportDone] = useState(false);
 
   const [recentChats, setRecentChats] = useState([]);
   const [chatSearch, setChatSearch] = useState('');
@@ -166,6 +238,21 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
 
   useEffect(() => { loadFriends(); loadIncoming(); }, [loadFriends, loadIncoming]);
   useEffect(() => { if (tab === 'requests') loadOutgoing(); }, [tab, loadOutgoing]);
+
+  const submitReport = async () => {
+    if (!reportTarget) return;
+    setReportLoading(true);
+    try {
+      await axios.post(`${API}/reports/${reportTarget._id}`, { reason: reportReason, description: reportDesc });
+      setReportDone(true);
+    } catch (e) {
+      alert(e.response?.data?.message || 'Failed to submit report.');
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  const closeReport = () => { setReportTarget(null); setReportReason('hostile'); setReportDesc(''); setReportDone(false); };
 
   useEffect(() => {
     if (!socket) return;
@@ -226,15 +313,25 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
   const sendRequest = useCallback(async (userId) => {
     try {
       const res = await axios.post(`${API}/friends/request/${userId}`);
-      setSearchStatuses((m) => ({ ...m, [userId]: { status: res.data.status } }));
+      setSearchStatuses((m) => ({
+        ...m,
+        [userId]: {
+          status: res.data.status,
+          requestId: res.data.requestId,
+          isSender: res.data.isSender ?? true,
+        },
+      }));
       if (res.data.status === 'accepted') loadFriends();
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error('Friend request failed', err);
+    }
   }, [loadFriends]);
 
   const acceptRequest = useCallback(async (requestId, senderId) => {
     try {
       await axios.put(`${API}/friends/accept/${requestId}`);
       setIncoming((prev) => prev.filter((r) => r._id !== requestId));
+      setSearchStatuses((m) => ({ ...m, [senderId]: { status: 'accepted' } }));
       loadFriends();
     } catch { /* ignore */ }
   }, [loadFriends]);
@@ -253,6 +350,44 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
       setSearchStatuses((m) => ({ ...m, [userId]: { status: 'none' } }));
     } catch { /* ignore */ }
   }, []);
+
+  const removeFriend = useCallback(async (userId) => {
+    try {
+      await axios.delete(`${API}/friends/${userId}`);
+      setFriends((prev) => prev.filter((f) => f._id !== userId));
+      setRecentChats((prev) => prev.filter((c) => c._id !== userId));
+      setSearchStatuses((prev) => ({ ...prev, [userId]: { status: 'none' } }));
+      if (selectedUser?._id === userId) onSelectUser(null);
+    } catch { /* ignore */ }
+  }, [onSelectUser, selectedUser?._id]);
+
+  const [blockTarget, setBlockTarget] = useState(null);
+
+  const toast = useToast();
+
+  const openBlockConfirm = useCallback((userId) => {
+    // try to resolve user object for nicer modal text
+    const u = friends.find((f) => f._id === userId)
+      || searchResults.find((s) => s._id === userId)
+      || { _id: userId, username: userId };
+    setBlockTarget(u);
+  }, [friends, searchResults]);
+
+  const performBlock = useCallback(async () => {
+    if (!blockTarget) return;
+    try {
+      await axios.post(`${API}/friends/block/${blockTarget._id}`);
+      await removeFriend(blockTarget._id);
+      toast?.show(`Blocked ${blockTarget.username}`);
+    } catch (err) {
+      console.error('block failed', err);
+      toast?.show('Failed to block user', { type: 'error' });
+    } finally {
+      setBlockTarget(null);
+    }
+  }, [blockTarget, removeFriend]);
+
+  const cancelBlock = useCallback(() => setBlockTarget(null), []);
 
   const openChat = useCallback((chatUser) => {
     setRecentChats((rs) => {
@@ -275,33 +410,34 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
 
   return (
     <>
-      <div className="w-full md:w-[320px] flex-shrink-0 bg-ink-800/90 backdrop-blur-xl flex flex-col border-r border-white/10 shadow-xl">
+      <div className="w-full md:w-[320px] flex-shrink-0 flex flex-col shadow-sm" style={{ background: 'var(--bg-surface)', borderRight: '1px solid var(--card-border)' }}>
 
         {/* Header */}
-        <div className="bg-gradient-to-r from-primary-800 via-primary-700 to-primary-600 text-white">
+        <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--card-border)', color: 'var(--text-primary)' }}>
           <div className="flex items-center gap-3 px-4 py-4">
             <button onClick={() => navigate('/settings')} title="Settings" className="flex-shrink-0">
               <Avatar name={user?.username} online={connected} size="sm" avatarFile={user?.avatar} />
             </button>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
-                <p className="font-semibold text-sm truncate">{user?.username}</p>
+                <p className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>{user?.username}</p>
                 {user?.isAdmin && (
-                  <span className="text-[9px] bg-primary-400/30 text-primary-200 font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide flex-shrink-0">
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide flex-shrink-0" style={{ background: 'rgba(10,163,163,0.12)', color: 'var(--accent)' }}>
                     Admin
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${connected ? 'bg-success' : 'bg-white/30'}`} />
-                <span className="text-xs opacity-80">{connected ? 'Online' : 'Reconnecting…'}</span>
+                <span className="w-2 h-2 rounded-full" style={{ background: connected ? '#10b981' : 'rgba(15,23,36,0.25)' }} />
+                <span className="text-xs" style={{ color: 'var(--text-secondary)', opacity: 0.8 }}>{connected ? 'Online' : 'Reconnecting…'}</span>
               </div>
             </div>
             <div className="flex items-center gap-0.5">
               <button
                 onClick={() => setShowQR(true)}
                 title="My invite QR"
-                className="hover:bg-white/20 p-2 rounded-lg transition duration-150"
+                className="p-2 rounded-lg transition duration-150"
+                style={{ color: 'var(--text-secondary)' }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -311,7 +447,8 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
               <button
                 onClick={() => navigate('/settings')}
                 title="Settings"
-                className="hover:bg-white/20 p-2 rounded-lg transition duration-150"
+                className="p-2 rounded-lg transition duration-150"
+                style={{ color: 'var(--text-secondary)' }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -322,9 +459,10 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
                 <button
                   onClick={() => navigate('/admin')}
                   title="Admin panel"
-                  className="hover:bg-white/20 p-2 rounded-lg transition duration-150"
+                  className="p-2 rounded-lg transition duration-150"
+                  style={{ color: 'var(--accent)' }}
                 >
-                  <svg className="w-4 h-4 text-primary-200" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 1l3.09 6.26L22 8.27l-5 4.87 1.18 6.88L12 16.77l-6.18 3.25L7 13.14 2 8.27l6.91-1.01L12 1z" />
                   </svg>
                 </button>
@@ -332,7 +470,8 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
               <button
                 onClick={logout}
                 title="Log out"
-                className="hover:bg-white/20 p-2 rounded-lg transition duration-150"
+                className="p-2 rounded-lg transition duration-150"
+                style={{ color: 'var(--text-secondary)' }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -344,11 +483,26 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 px-3 py-3 bg-white/[0.03] border-b border-white/10">
+        <div className="flex gap-2 px-3 py-3" style={{ background: 'var(--bg-muted)', borderBottom: '1px solid var(--card-border)' }}>
           <TabButton label="Chats"    active={tab === 'chats'}    onClick={() => setTab('chats')} />
           <TabButton label="People"   active={tab === 'people'}   onClick={() => setTab('people')} />
           <TabButton label="Requests" active={tab === 'requests'} badge={incomingCount} onClick={() => setTab('requests')} />
         </div>
+
+        {/* Probation banner */}
+        {user?.accountStatus === 'probation' && (
+          <div className="mx-3 mt-2 rounded-xl px-3 py-2 flex items-center gap-2" style={{ background: 'rgba(10,163,163,0.06)', border: '1px solid rgba(10,163,163,0.15)' }}>
+            <span className="text-lg flex-shrink-0">⏳</span>
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold" style={{ color: 'var(--accent)' }}>First week — settling in</p>
+              <p className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
+                Invite tokens unlock {user.probationEndsAt
+                  ? `in ${Math.max(0, Math.ceil((new Date(user.probationEndsAt) - Date.now()) / 86_400_000))} day(s)`
+                  : 'soon'}.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Tab content */}
         <div className="flex-1 overflow-y-auto">
@@ -365,13 +519,14 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
                     value={chatSearch}
                     onChange={(e) => setChatSearch(e.target.value)}
                     placeholder="Search chats"
-                    className="w-full bg-white/10 text-white rounded-lg pl-9 pr-3 py-2 text-sm outline-none placeholder-white/30 border border-white/10 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                    className="w-full rounded-lg pl-9 pr-3 py-2 text-sm outline-none"
+                    style={{ background: 'var(--bg-muted)', color: 'var(--text-primary)', border: '1px solid var(--card-border)' }}
                   />
                 </div>
               </div>
 
               {filteredChats.length === 0 && (
-                <p className="text-white/40 text-sm text-center py-8 px-4">
+                <p className="text-sm text-center py-8 px-4" style={{ color: 'var(--text-secondary)' }}>
                   {friends.length === 0
                     ? '👋 Add friends to start chatting'
                     : '🔍 No chats match your search'}
@@ -388,6 +543,10 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
                   isSelected={selectedUser?._id === u._id}
                   onSelect={() => openChat(u)}
                   onMessage={() => openChat(u)}
+                  onRemove={removeFriend}
+                  onBlock={openBlockConfirm}
+                  onReport={(u) => setReportTarget(u)}
+                  onViewProfile={() => navigate(`/add/${u.username}`)}
                 />
               ))}
             </div>
@@ -396,7 +555,7 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
           {/* ── People tab ── */}
           {tab === 'people' && (
             <div className="flex flex-col gap-1 pt-2">
-              <div className="px-3 pb-2">
+              <div className="px-3 pb-2 flex flex-col gap-2">
                 <div className="relative">
                   <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -405,15 +564,28 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
                     value={peopleSearch}
                     onChange={(e) => setPeopleSearch(e.target.value)}
                     placeholder="Find people by username"
-                    className="w-full bg-white/10 text-white rounded-lg pl-9 pr-3 py-2 text-sm outline-none placeholder-white/30 border border-white/10 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                    className="w-full rounded-lg pl-9 pr-3 py-2 text-sm outline-none"
+                    style={{ background: 'var(--bg-muted)', color: 'var(--text-primary)', border: '1px solid var(--card-border)' }}
                     autoFocus
                   />
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShowScanner(true)}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition"
+                  style={{ background: 'var(--bg-muted)', color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                  </svg>
+                  Scan QR Code
+                </button>
               </div>
 
               {searchResults.length > 0 && (
                 <>
-                  <p className="text-white/40 text-[11px] font-semibold uppercase tracking-wider px-4 py-2">🔎 Results</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider px-4 py-2" style={{ color: 'var(--text-secondary)' }}>🔎 Results</p>
                   {searchResults.map((u) => {
                     const s = searchStatuses[u._id];
                     const friendStatus = s?.status ?? 'none';
@@ -434,21 +606,26 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
                             ? (act) => act === 'accept'
                                 ? acceptRequest(s.requestId, u._id)
                                 : rejectRequest(s.requestId)
-                            : undefined
+                            : friendStatus === 'pending' && s?.isSender
+                              ? () => cancelOutgoing(u._id)
+                              : undefined
                         }
                         isSelected={selectedUser?._id === u._id}
                         onSelect={() => friendStatus === 'accepted' ? openChat(u) : undefined}
                         onMessage={() => openChat(u)}
+                        onRemove={removeFriend}
+                        onBlock={openBlockConfirm}
+                        onViewProfile={() => navigate(`/add/${u.username}`)}
                       />
                     );
                   })}
-                  <div className="h-px bg-white/10 mx-4 my-1" />
+                  <div className="h-px mx-4 my-1" style={{ background: 'var(--card-border)' }} />
                 </>
               )}
 
               {friends.length > 0 && (
                 <>
-                  <p className="text-white/40 text-[11px] font-semibold uppercase tracking-wider px-4 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider px-4 py-2" style={{ color: 'var(--text-secondary)' }}>
                     👥 Friends · {friends.length}
                   </p>
                   {friends.map((u) => (
@@ -461,13 +638,16 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
                       isSelected={selectedUser?._id === u._id}
                       onSelect={() => openChat(u)}
                       onMessage={() => openChat(u)}
+                      onRemove={removeFriend}
+                      onBlock={openBlockConfirm}
+                      onViewProfile={() => navigate(`/add/${u.username}`)}
                     />
                   ))}
                 </>
               )}
 
               {friends.length === 0 && !peopleSearch && (
-                <p className="text-white/40 text-sm text-center py-8 px-4">
+                <p className="text-sm text-center py-8 px-4" style={{ color: 'var(--text-secondary)' }}>
                   Search for people to add as friends
                 </p>
               )}
@@ -479,7 +659,7 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
             <div className="flex flex-col gap-1 pt-2">
               {incoming.length > 0 && (
                 <>
-                  <p className="text-white/40 text-[11px] font-semibold uppercase tracking-wider px-4 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider px-4 py-2" style={{ color: 'var(--text-secondary)' }}>
                     📨 Incoming · {incoming.length}
                   </p>
                   {incoming.map((req) => (
@@ -498,13 +678,13 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
                       onSelect={() => {}}
                     />
                   ))}
-                  <div className="h-px bg-white/10 mx-4 my-1" />
+                  <div className="h-px mx-4 my-1" style={{ background: 'var(--card-border)' }} />
                 </>
               )}
 
               {outgoing.length > 0 && (
                 <>
-                  <p className="text-white/40 text-[11px] font-semibold uppercase tracking-wider px-4 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider px-4 py-2" style={{ color: 'var(--text-secondary)' }}>
                     📤 Sent · {outgoing.length}
                   </p>
                   {outgoing.map((req) => (
@@ -523,7 +703,7 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
               )}
 
               {incoming.length === 0 && outgoing.length === 0 && (
-                <p className="text-white/40 text-sm text-center py-10 px-4">
+                <p className="text-sm text-center py-10 px-4" style={{ color: 'var(--text-secondary)' }}>
                   ✨ No pending requests
                 </p>
               )}
@@ -534,6 +714,80 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
       </div>
 
       {showQR && user && <QRModal user={user} onClose={() => setShowQR(false)} />}
+
+      {/* Report modal */}
+      {reportTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,36,0.5)' }}>
+          <div className="rounded-2xl shadow-xl p-6 max-w-sm w-full space-y-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--card-border)' }}>
+            {!reportDone ? (
+              <>
+                <div>
+                  <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>Report @{reportTarget.username}</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>Reports are reviewed privately. This is not shown to the reported user.</p>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: 'var(--text-secondary)' }}>Reason</label>
+                  <select
+                    value={reportReason}
+                    onChange={(e) => setReportReason(e.target.value)}
+                    className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
+                    style={{ background: 'var(--bg-muted)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }}
+                  >
+                    <option value="hostile">Hostile or aggressive</option>
+                    <option value="harassment">Harassment</option>
+                    <option value="doxxing">Sharing private info (doxxing)</option>
+                    <option value="spam">Spam or flooding</option>
+                    <option value="impersonation">Impersonation</option>
+                    <option value="real_world_harm">Coordinating real-world harm</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: 'var(--text-secondary)' }}>Details (optional)</label>
+                  <textarea
+                    value={reportDesc}
+                    onChange={(e) => setReportDesc(e.target.value)}
+                    maxLength={500}
+                    rows={3}
+                    placeholder="Anything the reviewer should know…"
+                    className="w-full rounded-xl px-3 py-2.5 text-sm outline-none resize-none transition"
+                    style={{ background: 'var(--bg-muted)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }}
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={closeReport} className="flex-1 py-2.5 rounded-xl text-sm font-medium transition" style={{ border: '1px solid var(--card-border)', color: 'var(--text-secondary)' }}>Cancel</button>
+                  <button onClick={submitReport} disabled={reportLoading} className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-50 text-warning" style={{ background: 'rgba(245,158,11,0.10)' }}>
+                    {reportLoading ? 'Sending…' : 'Submit report'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-center space-y-2 py-2">
+                  <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>Report submitted</p>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>A reviewer will look at this privately. Thank you for helping keep Unddr safe.</p>
+                </div>
+                <button onClick={closeReport} className="w-full py-2.5 rounded-xl text-sm font-semibold transition" style={{ background: 'var(--bg-muted)', color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}>Done</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      <ConfirmModal
+        open={!!blockTarget}
+        title={blockTarget ? `Block ${blockTarget.username}?` : 'Block user'}
+        description="Blocking will remove this contact and prevent them from messaging you. This action can be undone from the Blocked list."
+        onConfirm={performBlock}
+        onCancel={cancelBlock}
+        confirmLabel="Block"
+      />
+      {showScanner && (
+        <QRScanner
+          onClose={() => setShowScanner(false)}
+          onAdded={() => { loadFriends(); loadIncoming(); }}
+        />
+      )}
     </>
   );
 }

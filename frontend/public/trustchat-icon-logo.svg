@@ -1,0 +1,15 @@
+<svg width="1600" height="1600" viewBox="0 0 1600 1600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="1600" rx="360" fill="#FEEE05"/>
+
+  <!-- Outer trusted chat bubble -->
+  <path d="M415 466C415 375.425 488.425 302 579 302H1021C1111.57 302 1185 375.425 1185 466V823C1185 913.575 1111.57 987 1021 987H779.5L556.5 1166C528.966 1188.1 488 1168.49 488 1133.2V970.5C445.036 940.824 415 891.192 415 823V466Z" fill="#111111"/>
+
+  <!-- Inner negative chat shape -->
+  <path d="M544 511C544 461.847 583.847 422 633 422H967C1016.15 422 1056 461.847 1056 511V769C1056 818.153 1016.15 858 967 858H764.5L626.5 970C609.013 984.192 583 971.739 583 949.218V847.5C559.463 831.615 544 804.646 544 769V511Z" fill="#FEEE05"/>
+
+  <!-- Checkmark / trust signal -->
+  <path d="M681 652L759.5 731L922 568" stroke="#111111" stroke-width="78" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Small secure dot -->
+  <circle cx="1020" cy="1020" r="78" fill="#111111"/>
+</svg>

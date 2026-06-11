@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { useAuth } from '../context/AuthContext';
@@ -7,37 +7,73 @@ import OtpInput from '../components/OtpInput';
 
 const RESEND_SECONDS = 30;
 
-// Step indicator
-function Steps({ current }) {
+function Steps({ current, labels }) {
   return (
-    <div className="flex items-center gap-2 mb-8">
-      {['Phone', 'Verify'].map((label, i) => (
-        <div key={label} className="flex items-center gap-2">
-          <div className={`flex items-center gap-1.5`}>
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-              i < current ? 'bg-gradient-to-r from-success to-success text-white' :
-              i === current ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white ring-4 ring-primary-500/20' :
-              'bg-white/10 text-white/40'
-            }`}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 28 }}>
+      {labels.map((label, i) => (
+        <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{
+              width: 24, height: 24, borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 11, fontWeight: 700, flexShrink: 0,
+              background: i < current ? '#16A34A' : i === current ? 'var(--accent)' : 'rgba(15,23,36,0.07)',
+              color: '#fff',
+              opacity: i > current ? 0.4 : 1,
+              boxShadow: i === current ? '0 0 0 4px rgba(10,163,163,0.14)' : 'none',
+              transition: 'all 0.2s',
+            }}>
               {i < current ? '✓' : i + 1}
             </div>
-            <span className={`text-xs font-semibold ${i === current ? 'text-white' : 'text-white/50'}`}>{label}</span>
+            <span style={{
+              fontSize: 12, fontWeight: 600,
+              color: i === current ? 'var(--text-primary)' : 'var(--text-secondary)',
+              opacity: i === current ? 1 : 0.55,
+            }}>
+              {label}
+            </span>
           </div>
-          {i < 1 && <div className="w-8 h-px bg-white/20" />}
+          {i < labels.length - 1 && <div style={{ width: 28, height: 1, background: 'var(--card-border)' }} />}
         </div>
       ))}
     </div>
   );
 }
 
+const CARD = {
+  background: 'var(--bg-surface)',
+  borderRadius: 24,
+  padding: '32px',
+  border: '1px solid var(--card-border)',
+  boxShadow: '0 4px 40px rgba(15,23,36,0.08)',
+};
+
+const primaryBtn = (disabled) => ({
+  width: '100%', background: 'var(--accent)', color: '#fff',
+  fontWeight: 700, borderRadius: 12, padding: '13px 0',
+  border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
+  fontSize: 15, opacity: disabled ? 0.5 : 1, transition: 'opacity 0.2s',
+});
+
+const Spinner = () => (
+  <span style={{
+    width: 16, height: 16,
+    border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#fff',
+    borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite',
+  }} />
+);
+
 export default function Login() {
   const { sendOtp, verifyOtp, login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = new URLSearchParams(location.search).get('redirect') || '/';
+  const alreadyRegistered = location.state?.alreadyRegistered;
+  const prefilledPhone = location.state?.phone || '';
 
   const [step, setStep] = useState(0);
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(prefilledPhone);
   const [devOtp, setDevOtp] = useState(null);
-  const [verifiedToken, setVerifiedToken] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [resend, setResend] = useState(0);
@@ -50,10 +86,7 @@ export default function Login() {
   }, [resend]);
 
   const doSendOtp = useCallback(async () => {
-    if (!phone || !isValidPhoneNumber(phone)) {
-      setError('Enter a valid phone number.');
-      return;
-    }
+    if (!phone || !isValidPhoneNumber(phone)) { setError('Enter a valid phone number.'); return; }
     setError('');
     setLoading(true);
     try {
@@ -64,9 +97,7 @@ export default function Login() {
       setStep(1);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to send code.');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }, [phone, sendOtp]);
 
   const doVerify = useCallback(async (otp) => {
@@ -74,114 +105,105 @@ export default function Login() {
     setLoading(true);
     try {
       const { verifiedToken: token, isRegistered } = await verifyOtp(phone, otp);
-
       if (!isRegistered) {
         setError('No account found for this number. Please register first.');
         setLoading(false);
         return;
       }
-
-      setVerifiedToken(token);
       await login(phone, token);
-      navigate('/', { replace: true });
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Verification failed.');
       setLoading(false);
     }
-  }, [phone, verifyOtp, login, navigate]);
+  }, [phone, verifyOtp, login, navigate, redirectTo]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-ink-900 via-ink-800 to-ink-900 flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full mb-4 shadow-xl shadow-primary-900/50">
-            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold text-white">Welcome back</h1>
-          <p className="text-white/50 text-sm mt-2">Sign in with your phone number</p>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-muted) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div style={{ width: '100%', maxWidth: 400 }}>
+
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <img src="/assets/logo-unddr-teal-icon.svg" alt="Unddr" style={{ width: 64, height: 64, borderRadius: 18, marginBottom: 12 }} />
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 6px' }}>Welcome back</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14, margin: 0 }}>Sign in with your phone number</p>
         </div>
 
-        <div className="bg-white/[0.05] backdrop-blur-xl rounded-3xl p-8 border border-white/10 shadow-2xl shadow-black/40">
-          <Steps current={step} />
+        <div style={CARD}>
+          <Steps current={step} labels={['Phone', 'Verify']} />
 
-          {error && (
-            <div className="bg-error/10 border border-error/30 text-error rounded-xl p-3 mb-5 text-sm flex gap-2 items-start">
-              <span className="mt-0.5 font-bold">⚠</span>
-              <span className="font-medium">{error}</span>
+          {alreadyRegistered && !error && (
+            <div style={{ background: 'rgba(22,163,74,0.06)', border: '1px solid rgba(22,163,74,0.2)', borderRadius: 12, padding: '10px 14px', marginBottom: 20, fontSize: 13, color: '#166534', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              <span style={{ fontWeight: 700, flexShrink: 0 }}>✓</span>
+              <span>This number is already registered — sign in below.</span>
             </div>
           )}
 
-          {/* ── Step 0: Phone ── */}
+          {error && (
+            <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, padding: '10px 14px', marginBottom: 20, fontSize: 13, color: '#991b1b', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              <span>⚠</span>
+              <span>{error}</span>
+            </div>
+          )}
+
           {step === 0 && (
-            <div className="space-y-5">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <label className="block text-white/80 text-sm font-semibold mb-2.5">Phone number</label>
+                <label style={{ display: 'block', color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Phone number</label>
                 <PhoneInput
                   international
                   defaultCountry="US"
                   value={phone}
                   onChange={setPhone}
-                  className="phone-input-dark"
+                  className="phone-input-light"
                   disabled={loading}
                 />
-                <p className="text-white/40 text-xs mt-2">Include country code (e.g. +1 for US)</p>
+                <p style={{ color: 'var(--text-secondary)', fontSize: 12, marginTop: 6, opacity: 0.65 }}>Include country code (e.g. +1 for US)</p>
               </div>
-              <button
-                onClick={doSendOtp}
-                disabled={loading || !phone}
-                className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl py-3 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary-900/40 hover:shadow-xl active:scale-95"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Sending…
-                  </span>
-                ) : 'Send verification code'}
+              <button onClick={doSendOtp} disabled={loading || !phone} style={primaryBtn(loading || !phone)}>
+                {loading ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Spinner /> Sending…</span> : 'Send verification code'}
               </button>
             </div>
           )}
 
-          {/* ── Step 1: OTP ── */}
           {step === 1 && (
-            <div className="space-y-6">
-              <div className="text-center">
-                <p className="text-white/60 text-sm">
-                  Code sent to <span className="text-white font-semibold">{phone}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: 14, margin: '0 0 6px' }}>
+                  Code sent to <strong style={{ color: 'var(--text-primary)' }}>{phone}</strong>
                 </p>
                 <button
                   onClick={() => { setStep(0); setError(''); setDevOtp(null); }}
-                  className="text-primary-400 text-xs mt-2 hover:underline font-medium"
+                  style={{ color: 'var(--accent)', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}
                 >
                   Change number
                 </button>
               </div>
 
               {devOtp && (
-                <div className="bg-warning/10 border border-warning/30 rounded-xl px-4 py-3 text-center">
-                  <p className="text-warning font-semibold text-xs mb-2">🧪 DEV MODE — No SMS sent</p>
-                  <p className="text-warning text-3xl font-mono font-bold tracking-[0.2em]">{devOtp}</p>
+                <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 12, padding: '12px 16px', textAlign: 'center' }}>
+                  <p style={{ color: '#92400e', fontWeight: 700, fontSize: 12, marginBottom: 6 }}>🧪 DEV MODE — No SMS sent</p>
+                  <p style={{ color: '#92400e', fontFamily: 'monospace', fontSize: 28, fontWeight: 800, letterSpacing: '0.2em', margin: 0 }}>{devOtp}</p>
                 </div>
               )}
 
               <OtpInput onComplete={doVerify} disabled={loading} reset={otpReset} />
 
               {loading && (
-                <div className="flex justify-center">
-                  <span className="w-5 h-5 border-3 border-primary-700 border-t-primary-400 rounded-full animate-spin" />
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <span style={{ width: 20, height: 20, border: '2.5px solid var(--card-border)', borderTopColor: 'var(--accent)', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
                 </div>
               )}
 
-              <div className="text-center">
+              <div style={{ textAlign: 'center' }}>
                 {resend > 0 ? (
-                  <p className="text-white/50 text-sm">Resend code in <span className="text-white font-semibold tabular-nums">{resend}s</span></p>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: 0 }}>
+                    Resend in <strong style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{resend}s</strong>
+                  </p>
                 ) : (
                   <button
                     onClick={doSendOtp}
                     disabled={loading}
-                    className="text-primary-400 text-sm hover:underline disabled:opacity-50 font-medium"
+                    style={{ color: 'var(--accent)', fontSize: 13, background: 'none', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 600, opacity: loading ? 0.5 : 1, padding: 0 }}
                   >
                     Resend code
                   </button>
@@ -190,15 +212,20 @@ export default function Login() {
             </div>
           )}
 
-          <p className="text-white/50 text-sm text-center mt-6">
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13, textAlign: 'center', marginTop: 24, marginBottom: 0 }}>
             No account?{' '}
-            <Link to="/register" className="text-primary-400 hover:text-primary-300 hover:underline font-semibold">
+            <Link
+              to={redirectTo !== '/' ? `/register?redirect=${encodeURIComponent(redirectTo)}` : '/register'}
+              style={{ color: 'var(--accent)', fontWeight: 700, textDecoration: 'none' }}
+            >
               Create one
             </Link>
           </p>
         </div>
 
-        <p className="text-white/30 text-xs text-center mt-6">🔒 End-to-end encrypted • Your security is our priority</p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 12, textAlign: 'center', marginTop: 24, opacity: 0.5 }}>
+          🔒 End-to-end encrypted · Your security is our priority
+        </p>
       </div>
     </div>
   );

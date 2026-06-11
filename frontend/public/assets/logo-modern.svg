@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200" width="600" height="200" role="img" aria-labelledby="title">
+  <title id="title">UNDDR modern logo</title>
+  <defs>
+    <linearGradient id="mgrad" x1="0" x2="1">
+      <stop offset="0" stop-color="#FFD84A" />
+      <stop offset="1" stop-color="#FFB648" />
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="none"/>
+  <!-- Icon: geometric U shape representing underground arch -->
+  <g transform="translate(28,20)">
+    <path d="M40 20 L40 90 A40 40 0 0 0 120 90 L120 20" fill="none" stroke="url(#mgrad)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+  <!-- Logotype -->
+  <g transform="translate(180,56)">
+    <text x="0" y="48" font-family="'Space Grotesk', Inter, system-ui, sans-serif" font-weight="800" font-size="48" fill="#0B0B0A">UNDDR</text>
+    <text x="0" y="80" font-family="Inter, system-ui" font-size="12" fill="#6B7280">Invite-only · Encrypted · Vouched</text>
+  </g>
+</svg>

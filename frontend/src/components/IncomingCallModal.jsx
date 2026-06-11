@@ -96,7 +96,7 @@ export default function IncomingCallModal() {
             {avatarUrl ? (
               <img src={avatarUrl} alt="" className="relative w-28 h-28 rounded-full object-cover ring-4 ring-primary-500/40 z-10" />
             ) : (
-              <div className="relative w-28 h-28 bg-gradient-to-br from-primary-400 to-primary-700 rounded-full flex items-center justify-center text-white text-4xl font-bold ring-4 ring-primary-500/40 z-10 shadow-xl">
+              <div className="relative w-28 h-28 bg-primary-500 rounded-full flex items-center justify-center text-ink-950 text-4xl font-bold ring-4 ring-primary-500/40 z-10 shadow-xl">
                 {remoteUser.username?.[0]?.toUpperCase()}
               </div>
             )}

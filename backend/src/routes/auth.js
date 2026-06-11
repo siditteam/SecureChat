@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
 const PhoneOTP = require('../models/PhoneOTP');
+const Invite = require('../models/Invite');
+const FriendRequest = require('../models/FriendRequest');
 const authMiddleware = require('../middleware/auth');
 const { sendSMS } = require('../services/sms');
 
@@ -111,7 +113,7 @@ router.post('/verify-otp', otpLimiter, async (req, res) => {
 // ── Complete registration ─────────────────────────────────────────────────────
 router.post('/register', async (req, res) => {
   try {
-    const { phone, verifiedToken, username, publicKey } = req.body;
+    const { phone, verifiedToken, username, publicKey, inviteCode } = req.body;
 
     if (!phone || !verifiedToken || !username) {
       return res.status(400).json({ message: 'Phone, verifiedToken and username are required.' });
@@ -134,18 +136,72 @@ router.post('/register', async (req, res) => {
       return res.status(409).json({ message: 'Username taken. Try another.' });
     }
 
-    const user = await User.create({ phone, username, publicKey: publicKey || null });
+    // Validate invite code if provided
+    let inviteDoc = null;
+    if (inviteCode) {
+      inviteDoc = await Invite.findOne({ code: inviteCode, status: 'active' });
+      if (!inviteDoc || inviteDoc.expiresAt < new Date()) {
+        return res.status(400).json({ message: 'This invite link has expired or already been used.' });
+      }
+    }
+
+    const probationEndsAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const user = await User.create({
+      phone,
+      username,
+      publicKey: publicKey || null,
+      accountStatus: 'probation',
+      probationEndsAt,
+      invitedBy: inviteDoc ? inviteDoc.createdBy : null,
+    });
+
     await PhoneOTP.deleteOne({ _id: record._id });
+
+    // Consume invite + auto-friend
+    if (inviteDoc) {
+      inviteDoc.status = 'used';
+      inviteDoc.usedBy = user._id;
+      inviteDoc.usedAt = new Date();
+      await inviteDoc.save();
+
+      // Create accepted friendship both ways
+      await FriendRequest.create({ sender: inviteDoc.createdBy, receiver: user._id, status: 'accepted' });
+    }
 
     res.status(201).json({ token: generateToken(user._id), user: user.toPublicJSON() });
   } catch (err) {
     console.error('register error:', err.message || err);
-    // Duplicate key — surface a helpful message instead of a generic 500
     if (err.code === 11000) {
       const field = Object.keys(err.keyValue || {})[0] || 'field';
       return res.status(409).json({ message: `${field} already in use. Try a different one.` });
     }
     res.status(500).json({ message: err.message || 'Registration failed.' });
+  }
+});
+
+// ── Appeal a removal ──────────────────────────────────────────────────────────
+router.post('/appeal', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'No token' });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user) return res.status(401).json({ message: 'User not found' });
+    if (!user.isBanned) return res.status(400).json({ message: 'No removal to appeal.' });
+    if (user.hasAppealed) return res.status(400).json({ message: 'You have already submitted an appeal.' });
+
+    const { message } = req.body;
+    if (!message?.trim()) return res.status(400).json({ message: 'Appeal message is required.' });
+
+    user.appealMessage = message.trim().slice(0, 1000);
+    user.hasAppealed = true;
+    user.appealSubmittedAt = new Date();
+    user.accountStatus = 'appealing';
+    await user.save();
+
+    res.json({ ok: true });
+  } catch {
+    res.status(500).json({ message: 'Failed to submit appeal.' });
   }
 });
 

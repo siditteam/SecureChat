@@ -1,7 +1,14 @@
 const jwt = require('jsonwebtoken');
+const webpush = require('web-push');
 const User = require('./models/User');
 const Message = require('./models/Message');
 const ss = require('./socketState');
+
+webpush.setVapidDetails(
+  process.env.VAPID_EMAIL,
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
 
 module.exports = (io) => {
   ss.setIO(io);
@@ -71,6 +78,30 @@ module.exports = (io) => {
           io.to(receiverSocketId).emit('new_message', msgObj);
           await Message.findByIdAndUpdate(message._id, { deliveryStatus: 'delivered', deliveredAt: new Date() });
           msgObj.deliveryStatus = 'delivered';
+        } else {
+          // Receiver is offline — attempt web push
+          try {
+            const receiver = await User.findById(receiverId).select('pushSubscription settings');
+            if (receiver?.pushSubscription && receiver.settings?.notifications !== false) {
+              const senderUser = await User.findById(userId).select('username');
+              await webpush.sendNotification(
+                JSON.parse(receiver.pushSubscription),
+                JSON.stringify({
+                  title: 'TrustChat',
+                  body: hasMedia
+                    ? `${senderUser.username} sent you a ${mediaType || 'file'}`
+                    : `New message from ${senderUser.username}`,
+                  icon: '/assets/logo-unddr-teal-icon.svg',
+                  badge: '/assets/pngs/logo-unddr-icon-128.png',
+                  data: { url: '/' },
+                })
+              );
+            }
+          } catch (pushErr) {
+            if (pushErr.statusCode === 410 || pushErr.statusCode === 404) {
+              await User.findByIdAndUpdate(receiverId, { pushSubscription: null });
+            }
+          }
         }
 
         callback?.({ success: true, message: msgObj });

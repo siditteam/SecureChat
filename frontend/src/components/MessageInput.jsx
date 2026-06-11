@@ -111,7 +111,7 @@ export default function MessageInput({ recipient, onSend, onSendMedia }) {
                 onClick={() => { setExpiresIn(opt.value); setShowTimer(false); }}
                 className={`px-3 py-1 rounded-full text-xs font-semibold transition duration-150 ${
                   expiresIn === opt.value
-                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md'
+                    ? 'bg-primary-500 text-ink-950 shadow-md'
                     : 'bg-white/10 text-white/60 border border-white/10 hover:bg-white/20'
                 }`}
               >
@@ -166,10 +166,10 @@ export default function MessageInput({ recipient, onSend, onSendMedia }) {
           <button
             type="submit"
             disabled={!text.trim() || sending}
-            className="flex-shrink-0 p-2.5 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full text-white disabled:opacity-40 disabled:cursor-not-allowed hover:from-primary-600 hover:to-primary-700 transition duration-150 shadow-md shadow-primary-900/50 hover:shadow-lg"
+            className="flex-shrink-0 p-2.5 bg-primary-500 hover:bg-primary-400 rounded-full text-ink-950 disabled:opacity-40 disabled:cursor-not-allowed transition duration-150 shadow-md"
           >
             {sending ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-ink-950 border-t-transparent rounded-full animate-spin" />
             ) : (
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />

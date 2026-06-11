@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200" width="600" height="200" role="img" aria-labelledby="title">
+  <title id="title">UNDDR tech logo</title>
+  <defs>
+    <linearGradient id="tgrad" x1="0" x2="1">
+      <stop offset="0" stop-color="#06B6D4" />
+      <stop offset="1" stop-color="#7C3AED" />
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="none"/>
+  <!-- Shield + tunnel motif -->
+  <g transform="translate(28,20)">
+    <path d="M80 6 L140 36 V96 C140 130 104 156 80 170 C56 156 20 130 20 96 V36 Z" fill="url(#tgrad)" opacity="0.98" />
+    <circle cx="80" cy="82" r="24" fill="#041024" />
+    <path d="M80 70 L92 82 L80 94" stroke="#06F1E8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  </g>
+  <g transform="translate(180,56)">
+    <text x="0" y="48" font-family="'Space Grotesk', Inter" font-weight="800" font-size="48" fill="#0B0B0A">UNDDR</text>
+    <text x="0" y="80" font-family="Inter, system-ui" font-size="12" fill="#6B7280">Secure. Private. Invite-only.</text>
+  </g>
+</svg>

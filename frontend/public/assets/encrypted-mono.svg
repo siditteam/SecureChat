@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200" viewBox="0 0 800 200" role="img">
+  <title>Encrypted (mono)</title>
+  <rect width="100%" height="100%" fill="#071428" rx="14"/>
+  <g transform="translate(30,20)">
+    <g>
+      <rect x="0" y="10" width="120" height="100" rx="12" fill="#ffffff" opacity="0.06" />
+      <rect x="30" y="30" width="60" height="40" rx="6" fill="#ffffff" opacity="0.95" />
+      <rect x="40" y="44" width="40" height="8" rx="3" fill="#071428" />
+    </g>
+    <g transform="translate(170,40)">
+      <text x="0" y="30" font-family="Inter, system-ui" font-size="40" fill="#ffffff" font-weight="700">Encrypted.</text>
+      <text x="0" y="70" font-family="Inter, system-ui" font-size="18" fill="#9ca3af">End-to-end encryption keeps conversations private.</text>
+    </g>
+  </g>
+</svg>

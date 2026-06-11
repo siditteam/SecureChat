@@ -49,8 +49,16 @@ router.get('/:filename', auth, async (req, res) => {
       mediaUrl: filename,
       $or: [{ sender: req.user._id }, { receiver: req.user._id }],
       isDeleted: false,
+      $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }],
     });
     if (!msg) return res.status(403).json({ message: 'Access denied.' });
+
+    // Block check: if either side has blocked the other, deny
+    const otherId = msg.sender.toString() === req.user._id.toString() ? msg.receiver : msg.sender;
+    const other = await require('../models/User').findById(otherId).select('blockedUsers');
+    const meBlocked = (req.user.blockedUsers || []).map(String).includes(otherId.toString());
+    const otherBlockedMe = (other && (other.blockedUsers || []).map(String).includes(req.user._id.toString()));
+    if (meBlocked || otherBlockedMe) return res.status(403).json({ message: 'Access denied.' });
 
     const filepath = path.join(uploadsDir, filename);
     if (!fs.existsSync(filepath)) {
@@ -75,8 +83,17 @@ router.post('/:filename/viewed', auth, async (req, res) => {
     const msg = await Message.findOne({
       mediaUrl: filename,
       receiver: req.user._id,
+      isDeleted: false,
+      $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }],
     });
     if (!msg) return res.status(403).json({ message: 'Access denied.' });
+
+    // Block check for viewed endpoint as well
+    const otherId2 = msg.sender.toString() === req.user._id.toString() ? msg.receiver : msg.sender;
+    const other2 = await require('../models/User').findById(otherId2).select('blockedUsers');
+    const meBlocked2 = (req.user.blockedUsers || []).map(String).includes(otherId2.toString());
+    const otherBlockedMe2 = (other2 && (other2.blockedUsers || []).map(String).includes(req.user._id.toString()));
+    if (meBlocked2 || otherBlockedMe2) return res.status(403).json({ message: 'Access denied.' });
 
     if (!msg.mediaViewed) {
       msg.mediaViewed = true;

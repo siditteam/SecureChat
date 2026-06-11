@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { useAuth } from '../context/AuthContext';
@@ -10,20 +10,31 @@ const RESEND_SECONDS = 30;
 function Steps({ current }) {
   const labels = ['Phone', 'Verify', 'Username'];
   return (
-    <div className="flex items-center gap-2 mb-8">
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 28 }}>
       {labels.map((label, i) => (
-        <div key={label} className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5">
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-              i < current ? 'bg-gradient-to-r from-success to-success text-white' :
-              i === current ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white ring-4 ring-primary-500/20' :
-              'bg-white/10 text-white/40'
-            }`}>
+        <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{
+              width: 24, height: 24, borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 11, fontWeight: 700, flexShrink: 0,
+              background: i < current ? '#16A34A' : i === current ? 'var(--accent)' : 'rgba(15,23,36,0.07)',
+              color: '#fff',
+              opacity: i > current ? 0.4 : 1,
+              boxShadow: i === current ? '0 0 0 4px rgba(10,163,163,0.14)' : 'none',
+              transition: 'all 0.2s',
+            }}>
               {i < current ? '✓' : i + 1}
             </div>
-            <span className={`text-xs font-semibold ${i === current ? 'text-white' : 'text-white/50'}`}>{label}</span>
+            <span style={{
+              fontSize: 11, fontWeight: 600,
+              color: i === current ? 'var(--text-primary)' : 'var(--text-secondary)',
+              opacity: i === current ? 1 : 0.55,
+            }}>
+              {label}
+            </span>
           </div>
-          {i < labels.length - 1 && <div className="w-6 h-px bg-white/20 flex-shrink-0" />}
+          {i < labels.length - 1 && <div style={{ width: 20, height: 1, background: 'var(--card-border)', flexShrink: 0 }} />}
         </div>
       ))}
     </div>
@@ -39,9 +50,36 @@ function usernameHint(v) {
   return null;
 }
 
+const CARD = {
+  background: 'var(--bg-surface)',
+  borderRadius: 24,
+  padding: '32px',
+  border: '1px solid var(--card-border)',
+  boxShadow: '0 4px 40px rgba(15,23,36,0.08)',
+};
+
+const primaryBtn = (disabled) => ({
+  width: '100%', background: 'var(--accent)', color: '#fff',
+  fontWeight: 700, borderRadius: 12, padding: '13px 0',
+  border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
+  fontSize: 15, opacity: disabled ? 0.5 : 1, transition: 'opacity 0.2s',
+});
+
+const Spinner = ({ dark } = {}) => (
+  <span style={{
+    width: 16, height: 16,
+    border: `2px solid ${dark ? 'rgba(15,23,36,0.2)' : 'rgba(255,255,255,0.35)'}`,
+    borderTopColor: dark ? 'var(--text-primary)' : '#fff',
+    borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite',
+  }} />
+);
+
 export default function Register() {
-  const { sendOtp, verifyOtp, register, login } = useAuth();
+  const { sendOtp, verifyOtp, register } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = new URLSearchParams(location.search).get('redirect') || '/';
+  const inviteCode = new URLSearchParams(location.search).get('invite') || '';
 
   const [step, setStep] = useState(0);
   const [phone, setPhone] = useState('');
@@ -60,10 +98,7 @@ export default function Register() {
   }, [resend]);
 
   const doSendOtp = useCallback(async () => {
-    if (!phone || !isValidPhoneNumber(phone)) {
-      setError('Enter a valid phone number.');
-      return;
-    }
+    if (!phone || !isValidPhoneNumber(phone)) { setError('Enter a valid phone number.'); return; }
     setError('');
     setLoading(true);
     try {
@@ -74,9 +109,7 @@ export default function Register() {
       setStep(1);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to send code.');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }, [phone, sendOtp]);
 
   const doVerify = useCallback(async (otp) => {
@@ -85,18 +118,16 @@ export default function Register() {
     try {
       const { verifiedToken: token, isRegistered } = await verifyOtp(phone, otp);
       if (isRegistered) {
-        await login(phone, token);
-        navigate('/', { replace: true });
+        const loginPath = redirectTo !== '/' ? `/login?redirect=${encodeURIComponent(redirectTo)}` : '/login';
+        navigate(loginPath, { replace: true, state: { alreadyRegistered: true, phone } });
         return;
       }
       setVerifiedToken(token);
       setStep(2);
     } catch (err) {
       setError(err.response?.data?.message || 'Verification failed.');
-    } finally {
-      setLoading(false);
-    }
-  }, [phone, verifyOtp, login, navigate]);
+    } finally { setLoading(false); }
+  }, [phone, verifyOtp, navigate, redirectTo]);
 
   const doRegister = useCallback(async (e) => {
     e.preventDefault();
@@ -105,110 +136,97 @@ export default function Register() {
     setError('');
     setLoading(true);
     try {
-      await register(phone, verifiedToken, username.trim());
-      navigate('/', { replace: true });
+      await register(phone, verifiedToken, username.trim(), inviteCode || undefined);
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed.');
-    } finally {
-      setLoading(false);
-    }
-  }, [phone, verifiedToken, username, register, navigate]);
+    } finally { setLoading(false); }
+  }, [phone, verifiedToken, username, register, navigate, redirectTo, inviteCode]);
 
   const hint = usernameHint(username);
   const usernameOk = username && !hint;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-ink-900 via-ink-800 to-ink-900 flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full mb-4 shadow-xl shadow-primary-900/50">
-            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold text-white">Create account</h1>
-          <p className="text-white/50 text-sm mt-2">Verify your phone to get started</p>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-muted) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div style={{ width: '100%', maxWidth: 400 }}>
+
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <img src="/assets/logo-unddr-teal-icon.svg" alt="Unddr" style={{ width: 64, height: 64, borderRadius: 18, marginBottom: 12 }} />
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 6px' }}>Create account</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14, margin: 0 }}>Verify your phone to get started</p>
         </div>
 
-        <div className="bg-white/[0.05] backdrop-blur-xl rounded-3xl p-8 border border-white/10 shadow-2xl shadow-black/40">
+        <div style={CARD}>
           <Steps current={step} />
 
           {error && (
-            <div className="bg-error/10 border border-error/30 text-error rounded-xl p-3 mb-5 text-sm flex gap-2 items-start">
-              <span className="mt-0.5 font-bold flex-shrink-0">⚠</span>
-              <span className="font-medium">{error}</span>
+            <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, padding: '10px 14px', marginBottom: 20, fontSize: 13, color: '#991b1b', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              <span>⚠</span>
+              <span>{error}</span>
             </div>
           )}
 
-          {/* ── Step 0: Phone ── */}
+          {/* Step 0: Phone */}
           {step === 0 && (
-            <div className="space-y-5">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <label className="block text-white/80 text-sm font-semibold mb-2.5">Phone number</label>
+                <label style={{ display: 'block', color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Phone number</label>
                 <PhoneInput
                   international
                   defaultCountry="US"
                   value={phone}
                   onChange={setPhone}
-                  className="phone-input-dark"
+                  className="phone-input-light"
                   disabled={loading}
                 />
-                <p className="text-white/40 text-xs mt-2">Include country code (e.g. +91 for India)</p>
+                <p style={{ color: 'var(--text-secondary)', fontSize: 12, marginTop: 6, opacity: 0.65 }}>Include country code (e.g. +91 for India)</p>
               </div>
-              <button
-                onClick={doSendOtp}
-                disabled={loading || !phone}
-                className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl py-3 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary-900/40 hover:shadow-xl active:scale-95"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Sending…
-                  </span>
-                ) : 'Send verification code'}
+              <button onClick={doSendOtp} disabled={loading || !phone} style={primaryBtn(loading || !phone)}>
+                {loading ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Spinner /> Sending…</span> : 'Send verification code'}
               </button>
             </div>
           )}
 
-          {/* ── Step 1: OTP ── */}
+          {/* Step 1: OTP */}
           {step === 1 && (
-            <div className="space-y-6">
-              <div className="text-center">
-                <p className="text-white/60 text-sm">
-                  Code sent to <span className="text-white font-semibold">{phone}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: 14, margin: '0 0 6px' }}>
+                  Code sent to <strong style={{ color: 'var(--text-primary)' }}>{phone}</strong>
                 </p>
                 <button
                   onClick={() => { setStep(0); setError(''); setDevOtp(null); }}
-                  className="text-primary-400 text-xs mt-2 hover:underline font-medium"
+                  style={{ color: 'var(--accent)', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}
                 >
                   Change number
                 </button>
               </div>
 
               {devOtp && (
-                <div className="bg-warning/10 border border-warning/30 rounded-xl px-4 py-3 text-center">
-                  <p className="text-warning font-semibold text-xs mb-2">🧪 DEV MODE — No SMS sent</p>
-                  <p className="text-warning text-3xl font-mono font-bold tracking-[0.2em]">{devOtp}</p>
+                <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 12, padding: '12px 16px', textAlign: 'center' }}>
+                  <p style={{ color: '#92400e', fontWeight: 700, fontSize: 12, marginBottom: 6 }}>🧪 DEV MODE — No SMS sent</p>
+                  <p style={{ color: '#92400e', fontFamily: 'monospace', fontSize: 28, fontWeight: 800, letterSpacing: '0.2em', margin: 0 }}>{devOtp}</p>
                 </div>
               )}
 
               <OtpInput onComplete={doVerify} disabled={loading} reset={otpReset} />
 
               {loading && (
-                <div className="flex justify-center">
-                  <span className="w-5 h-5 border-3 border-primary-700 border-t-primary-400 rounded-full animate-spin" />
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <span style={{ width: 20, height: 20, border: '2.5px solid var(--card-border)', borderTopColor: 'var(--accent)', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
                 </div>
               )}
 
-              <div className="text-center">
+              <div style={{ textAlign: 'center' }}>
                 {resend > 0 ? (
-                  <p className="text-white/50 text-sm">Resend in <span className="text-white font-semibold tabular-nums">{resend}s</span></p>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: 0 }}>
+                    Resend in <strong style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{resend}s</strong>
+                  </p>
                 ) : (
                   <button
                     onClick={doSendOtp}
                     disabled={loading}
-                    className="text-primary-400 text-sm hover:underline disabled:opacity-50 font-medium"
+                    style={{ color: 'var(--accent)', fontSize: 13, background: 'none', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 600, opacity: loading ? 0.5 : 1, padding: 0 }}
                   >
                     Resend code
                   </button>
@@ -217,68 +235,63 @@ export default function Register() {
             </div>
           )}
 
-          {/* ── Step 2: Username ── */}
+          {/* Step 2: Username */}
           {step === 2 && (
-            <form onSubmit={doRegister} className="space-y-5">
-              <div className="text-center mb-3 p-3 bg-success/10 rounded-lg border border-success/30">
-                <p className="text-success font-semibold text-sm">✓ Phone verified</p>
-                <p className="text-white/70 text-sm font-medium mt-1">{phone}</p>
+            <form onSubmit={doRegister} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ background: 'rgba(22,163,74,0.06)', border: '1px solid rgba(22,163,74,0.2)', borderRadius: 12, padding: '10px 14px', textAlign: 'center' }}>
+                <p style={{ color: '#166534', fontWeight: 700, fontSize: 13, margin: '0 0 2px' }}>✓ Phone verified</p>
+                <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: 0 }}>{phone}</p>
               </div>
 
               <div>
-                <label className="block text-white/80 text-sm font-semibold mb-2.5">Choose a username</label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/50 text-sm font-semibold">@</span>
+                <label style={{ display: 'block', color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Choose a username</label>
+                <div style={{ position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', fontSize: 14, fontWeight: 600, opacity: 0.6 }}>@</span>
                   <input
                     type="text"
                     value={username}
                     onChange={(e) => { setUsername(e.target.value); setError(''); }}
                     maxLength={20}
                     autoFocus
-                    className={`w-full bg-white/10 text-white rounded-xl pl-8 pr-10 py-3 text-sm outline-none border-2 transition placeholder-white/30 ${
-                      username
-                        ? usernameOk ? 'border-success bg-success/10' : 'border-error/50 bg-error/5'
-                        : 'border-white/10 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20'
-                    }`}
                     placeholder="yourname"
+                    style={{
+                      width: '100%', boxSizing: 'border-box',
+                      background: 'var(--bg-muted)',
+                      border: `1.5px solid ${username ? (usernameOk ? 'rgba(22,163,74,0.4)' : 'rgba(239,68,68,0.35)') : 'var(--card-border)'}`,
+                      borderRadius: 12, padding: '11px 36px 11px 28px',
+                      fontSize: 14, color: 'var(--text-primary)', outline: 'none',
+                    }}
                   />
                   {usernameOk && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-success text-lg">✓</span>
+                    <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#16A34A', fontSize: 16 }}>✓</span>
                   )}
                 </div>
-                {hint && username && (
-                  <p className="text-error text-xs mt-2 font-medium">{hint}</p>
-                )}
-                {!hint && !username && (
-                  <p className="text-white/40 text-xs mt-2">3–20 chars • letters, numbers, underscores</p>
-                )}
+                {hint && username ? (
+                  <p style={{ color: '#991b1b', fontSize: 12, marginTop: 6 }}>{hint}</p>
+                ) : !hint && !username ? (
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 12, marginTop: 6, opacity: 0.65 }}>3–20 chars · letters, numbers, underscores</p>
+                ) : null}
               </div>
 
-              <button
-                type="submit"
-                disabled={loading || !usernameOk}
-                className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl py-3 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary-900/40 hover:shadow-xl active:scale-95"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Creating account…
-                  </span>
-                ) : 'Create account'}
+              <button type="submit" disabled={loading || !usernameOk} style={primaryBtn(loading || !usernameOk)}>
+                {loading ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Spinner /> Creating account…</span> : 'Create account'}
               </button>
             </form>
           )}
 
-          <p className="text-white/50 text-sm text-center mt-6">
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13, textAlign: 'center', marginTop: 24, marginBottom: 0 }}>
             Have an account?{' '}
-            <Link to="/login" className="text-primary-400 hover:text-primary-300 hover:underline font-semibold">
+            <Link
+              to={redirectTo !== '/' ? `/login?redirect=${encodeURIComponent(redirectTo)}` : '/login'}
+              style={{ color: 'var(--accent)', fontWeight: 700, textDecoration: 'none' }}
+            >
               Sign in
             </Link>
           </p>
         </div>
 
-        <p className="text-white/30 text-xs text-center mt-6">
-          🔐 Your private key never leaves this device • 🔒 End-to-end encrypted
+        <p style={{ color: 'var(--text-secondary)', fontSize: 12, textAlign: 'center', marginTop: 24, opacity: 0.5 }}>
+          🔐 Your private key never leaves this device · 🔒 End-to-end encrypted
         </p>
       </div>
     </div>

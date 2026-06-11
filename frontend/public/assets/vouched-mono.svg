@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="220" viewBox="0 0 900 220" role="img">
+  <title>Vouched (mono)</title>
+  <rect width="100%" height="100%" fill="#041024" rx="12"/>
+  <g transform="translate(40,20)">
+    <g>
+      <polygon points="0,60 40,20 80,60 80,120 0,120" fill="#ffffff" stroke="#ffffff" stroke-width="0.8" opacity="0.08" />
+      <circle cx="40" cy="85" r="12" fill="#ffffff" opacity="0.9" />
+      <path d="M28 83 l6 6 l18 -18" stroke="#041024" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(120,40)">
+      <text x="0" y="30" font-family="Inter, system-ui" font-size="42" fill="#ffffff" font-weight="700">Vouched.</text>
+      <text x="0" y="72" font-family="Inter, system-ui" font-size="18" fill="#9ca3af">Membership backed by real vouches and reputation.</text>
+    </g>
+  </g>
+</svg>

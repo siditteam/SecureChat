@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360">
+  <defs>
+    <style>
+      .word { font-family: 'Space Grotesk', Arial, Helvetica, sans-serif; font-weight: 800; fill: #FEEE05; font-size:200px; letter-spacing: -8px }
+      .tag  { font-family: 'Space Grotesk', Arial, Helvetica, sans-serif; font-weight: 500; fill: #FFFFFF; font-size:32px }
+      .domain{ font-family: 'Space Grotesk', Arial, Helvetica, sans-serif; font-weight: 500; fill: #FFFFFF; font-size:28px }
+    </style>
+  </defs>
+  <rect width="100%" height="100%" fill="transparent"/>
+  <g transform="translate(64,60)">
+    <text class="word">UNDDR</text>
+    <g transform="translate(0,170)">
+      <text class="tag">Private · Invite-Only · Trusted</text>
+    </g>
+    <g transform="translate(0,220)">
+      <text class="domain">unddrground.com</text>
+    </g>
+  </g>
+</svg>

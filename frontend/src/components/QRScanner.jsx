@@ -1,0 +1,207 @@
+import { useEffect, useRef, useState } from 'react';
+import { Html5Qrcode } from 'html5-qrcode';
+import axios from 'axios';
+
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+export default function QRScanner({ onClose, onAdded }) {
+  const scannerRef = useRef(null);
+  const isRunningRef = useRef(false);
+  const [phase, setPhase] = useState('scanning'); // scanning | found | done | error
+  const [profile, setProfile] = useState(null);
+  const [friendStatus, setFriendStatus] = useState(null);
+  const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const scanner = new Html5Qrcode('qr-reader-box');
+    scannerRef.current = scanner;
+
+    scanner
+      .start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 220, height: 220 } },
+        async (text) => {
+          // Stop scanning immediately on first decode
+          if (isRunningRef.current) {
+            isRunningRef.current = false;
+            await scanner.stop().catch(() => {});
+          }
+
+          // Parse username from invite URL: .../add/<username>
+          const match = text.match(/\/add\/([^/?#\s]+)/);
+          if (!match) {
+            setErr('Not a valid Unddr QR code');
+            setPhase('error');
+            return;
+          }
+
+          try {
+            const { data: prof } = await axios.get(
+              `${API}/users/by-username/${encodeURIComponent(match[1])}`
+            );
+            setProfile(prof);
+            const { data: st } = await axios
+              .get(`${API}/friends/status/${prof._id}`)
+              .catch(() => ({ data: { status: 'none' } }));
+            setFriendStatus(st.status);
+            setPhase('found');
+          } catch {
+            setErr('User not found');
+            setPhase('error');
+          }
+        },
+        () => {} // per-frame decode errors — ignore
+      )
+      .then(() => { isRunningRef.current = true; })
+      .catch(() => {
+        setErr('Camera access denied or not available');
+        setPhase('error');
+      });
+
+    return () => {
+      if (isRunningRef.current) {
+        isRunningRef.current = false;
+        scanner.stop().catch(() => {});
+      }
+    };
+  }, []);
+
+  const sendRequest = async () => {
+    setLoading(true);
+    setErr('');
+    try {
+      const { data } = await axios.post(`${API}/friends/request/${profile._id}`);
+      setFriendStatus(data.status);
+      setPhase('done');
+      onAdded?.();
+    } catch (e) {
+      setErr(e.response?.data?.message || 'Failed to send request');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 px-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-[#202c33] rounded-2xl w-full max-w-xs shadow-2xl overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <h3 className="text-white font-semibold text-base">Scan QR Code</h3>
+          <button
+            onClick={onClose}
+            className="text-white/50 hover:text-white p-1 rounded-full hover:bg-white/10 transition"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Camera view */}
+        {phase === 'scanning' && (
+          <div className="p-4 flex flex-col items-center gap-3">
+            <div id="qr-reader-box" className="w-full rounded-xl overflow-hidden" />
+            <p className="text-white/40 text-xs text-center">
+              Point your camera at a Unddr QR code
+            </p>
+          </div>
+        )}
+
+        {/* User found — confirm add */}
+        {phase === 'found' && profile && (
+          <div className="p-6 flex flex-col items-center gap-4 text-center">
+            <div className="w-16 h-16 bg-primary-500 rounded-full flex items-center justify-center text-ink-950 text-2xl font-bold shadow-lg">
+              {profile.username[0].toUpperCase()}
+            </div>
+
+            <div>
+              <p className="text-white font-bold text-lg">@{profile.username}</p>
+              <p className="text-white/50 text-sm mt-0.5">Unddr user</p>
+            </div>
+
+            {friendStatus === 'accepted' && (
+              <div className="w-full bg-[#00a884]/10 border border-[#00a884]/20 rounded-xl py-2.5 px-4">
+                <p className="text-[#00a884] text-sm font-medium">Already friends ✓</p>
+              </div>
+            )}
+
+            {friendStatus === 'pending' && (
+              <div className="w-full bg-yellow-500/10 border border-yellow-500/20 rounded-xl py-2.5 px-4">
+                <p className="text-yellow-400 text-sm font-medium">Request already sent</p>
+              </div>
+            )}
+
+            {friendStatus === 'none' && (
+              <button
+                onClick={sendRequest}
+                disabled={loading}
+                className="w-full bg-[#00a884] hover:bg-[#02b397] text-white font-semibold rounded-xl py-3 transition disabled:opacity-50 text-sm"
+              >
+                {loading
+                  ? <span className="flex items-center justify-center gap-2">
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Sending…
+                    </span>
+                  : 'Send friend request'}
+              </button>
+            )}
+
+            {err && <p className="text-red-400 text-sm">{err}</p>}
+
+            <button onClick={onClose} className="text-white/40 text-xs hover:text-white/70 transition">
+              Close
+            </button>
+          </div>
+        )}
+
+        {/* Success */}
+        {phase === 'done' && (
+          <div className="p-6 flex flex-col items-center gap-4 text-center">
+            <div className="w-16 h-16 bg-[#00a884]/20 rounded-full flex items-center justify-center">
+              <svg className="w-9 h-9 text-[#00a884]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-white font-bold text-base">Request sent!</p>
+              <p className="text-white/50 text-sm mt-1">
+                Waiting for @{profile?.username} to accept
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-full bg-[#2a3942] hover:bg-[#3a4a52] text-white font-semibold rounded-xl py-3 transition text-sm"
+            >
+              Done
+            </button>
+          </div>
+        )}
+
+        {/* Error */}
+        {phase === 'error' && (
+          <div className="p-6 flex flex-col items-center gap-4 text-center">
+            <div className="w-16 h-16 bg-red-900/20 rounded-full flex items-center justify-center">
+              <svg className="w-9 h-9 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-white font-bold text-base">Scan failed</p>
+              <p className="text-white/50 text-sm mt-1">{err}</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-full bg-[#2a3942] hover:bg-[#3a4a52] text-white font-semibold rounded-xl py-3 transition text-sm"
+            >
+              Close
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

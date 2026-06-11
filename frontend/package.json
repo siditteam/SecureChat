@@ -6,21 +6,25 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
+     ,"export:svgs": "node scripts/export-svgs.cjs"
   },
   "dependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
     "axios": "^1.6.2",
+    "html5-qrcode": "^2.3.8",
+    "mongodb": "^7.2.0",
     "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-phone-number-input": "^3.4.16",
     "react-router-dom": "^6.20.1",
-    "socket.io-client": "^4.7.2"
+    "socket.io-client": "^4.7.2",
+    "vite": "^5.0.8"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.16",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.3.6",
-    "vite": "^5.0.8"
+    "sharp": "^0.32.1"
   }
 }

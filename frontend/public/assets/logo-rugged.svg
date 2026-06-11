@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 220" width="700" height="220" role="img" aria-labelledby="title">
+  <title id="title">UNDDR rugged logo</title>
+  <rect width="100%" height="100%" fill="none"/>
+  <!-- Rough stamp background -->
+  <g transform="translate(18,18)">
+    <rect x="0" y="0" width="184" height="184" rx="22" fill="#0b0b0a" stroke="#FFD800" stroke-width="6" opacity="0.98" />
+    <g transform="translate(22,26)">
+      <path d="M40 18c18 0 32 14 32 32v30H8V50c0-18 14-32 32-32z" fill="#FFD800" />
+      <text x="0" y="132" font-family="'Space Grotesk', Inter" font-size="18" font-weight="700" fill="#FFD800">UND R</text>
+    </g>
+  </g>
+  <g transform="translate(230,84)">
+    <text x="0" y="12" font-family="Inter, system-ui" font-size="22" fill="#111827" font-weight="700">UNDDR</text>
+    <text x="0" y="40" font-family="Inter, system-ui" font-size="12" fill="#6B7280">The underground, invited.</text>
+  </g>
+</svg>

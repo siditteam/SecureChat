@@ -39,7 +39,7 @@ export function AuthProvider({ children }) {
   };
 
   // Step 3a: complete registration (generates E2EE key pair)
-  const register = async (phone, verifiedToken, username) => {
+  const register = async (phone, verifiedToken, username, inviteCode) => {
     const { publicKeyJwk, privateKeyJwk } = await generateKeyPair();
 
     const res = await axios.post(`${API}/auth/register`, {
@@ -47,6 +47,7 @@ export function AuthProvider({ children }) {
       verifiedToken,
       username,
       publicKey: JSON.stringify(publicKeyJwk),
+      ...(inviteCode && { inviteCode }),
     });
 
     const { token, user: newUser } = res.data;

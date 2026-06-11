@@ -14,11 +14,14 @@ function StatCard({ label, value, sub, color = 'primary' }) {
     red:     'from-red-500 to-red-600',
     indigo:  'from-indigo-500 to-indigo-600',
   };
+  const textColor = color === 'primary' ? 'text-ink-950' : 'text-white';
+  const subTextColor = color === 'primary' ? 'text-ink-950/70' : 'text-white/70';
+  const labelTextColor = color === 'primary' ? 'text-ink-950/80' : 'text-white/80';
   return (
-    <div className={`bg-gradient-to-br ${colors[color]} rounded-2xl p-4 text-white shadow-md`}>
-      <p className="text-white/80 text-[11px] font-medium uppercase tracking-wider mb-1.5">{label}</p>
+    <div className={`bg-gradient-to-br ${colors[color]} rounded-2xl p-4 ${textColor} shadow-md`}>
+      <p className={`${labelTextColor} text-[11px] font-medium uppercase tracking-wider mb-1.5`}>{label}</p>
       <p className="text-2xl font-bold">{value ?? '—'}</p>
-      {sub && <p className="text-white/70 text-xs mt-0.5">{sub}</p>}
+      {sub && <p className={`${subTextColor} text-xs mt-0.5`}>{sub}</p>}
     </div>
   );
 }
@@ -100,7 +103,11 @@ function AccessDenied({ onClaim, claiming, claimError, onBack }) {
 const NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
   { id: 'users',     label: 'Users',     icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
+  { id: 'reports',   label: 'Reports',   icon: 'M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z' },
+  { id: 'appeals',   label: 'Appeals',   icon: 'M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3' },
   { id: 'system',    label: 'System',    icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
+  { id: 'blocked',      label: 'Blocked',      icon: 'M18 8a6 6 0 11-12 0 6 6 0 0112 0z' },
+  { id: 'applications', label: 'Applications', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
 ];
 
 export default function Admin() {
@@ -118,10 +125,75 @@ export default function Admin() {
   const [usersQuery, setUsersQuery] = useState('');
   const [usersLoading, setUsersLoading] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(null);
+  const [blockedList, setBlockedList] = useState([]);
   const [claiming, setClaiming] = useState(false);
   const [claimError, setClaimError] = useState('');
+  const [reports, setReports] = useState([]);
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [appeals, setAppeals] = useState([]);
+  const [appealsLoading, setAppealsLoading] = useState(false);
+  const [applications, setApplications] = useState([]);
+  const [applicationsLoading, setApplicationsLoading] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState(null);
+  const [removeReason, setRemoveReason] = useState('');
 
   const isAdmin = user?.isAdmin;
+
+  const loadReports = useCallback(() => {
+    if (!isAdmin) return;
+    setReportsLoading(true);
+    axios.get(`${API}/admin/reports?status=pending`)
+      .then((r) => setReports(r.data))
+      .catch(() => {})
+      .finally(() => setReportsLoading(false));
+  }, [isAdmin]);
+
+  const loadAppeals = useCallback(() => {
+    if (!isAdmin) return;
+    setAppealsLoading(true);
+    axios.get(`${API}/admin/appeals`)
+      .then((r) => setAppeals(r.data))
+      .catch(() => {})
+      .finally(() => setAppealsLoading(false));
+  }, [isAdmin]);
+
+  const loadApplications = useCallback(() => {
+    if (!isAdmin) return;
+    setApplicationsLoading(true);
+    axios.get(`${API}/admin/applications?status=pending`)
+      .then((r) => setApplications(r.data))
+      .catch(() => {})
+      .finally(() => setApplicationsLoading(false));
+  }, [isAdmin]);
+
+  const reviewApplication = async (id, action) => {
+    try {
+      await axios.put(`${API}/admin/applications/${id}`, { action });
+      setApplications((prev) => prev.filter((a) => a._id !== id));
+    } catch (e) { alert(e.response?.data?.message || 'Failed'); }
+  };
+
+  const reviewReport = async (reportId, action, extra = {}) => {
+    try {
+      await axios.put(`${API}/admin/reports/${reportId}`, { action, ...extra });
+      loadReports();
+    } catch (e) { alert(e.response?.data?.message || 'Failed'); }
+  };
+
+  const restoreUser = async (userId) => {
+    await axios.put(`${API}/admin/users/${userId}/restore`);
+    loadAppeals();
+  };
+
+  const rejectAppeal = async (userId) => {
+    await axios.put(`${API}/admin/users/${userId}/reject-appeal`);
+    loadAppeals();
+  };
+
+  const promoteUser = async (userId) => {
+    await axios.put(`${API}/admin/users/${userId}/promote`);
+    loadUsers(usersPage, usersQuery);
+  };
 
   const refreshStats = useCallback(() => {
     if (!isAdmin) return;
@@ -147,8 +219,29 @@ export default function Admin() {
   }, [isAdmin]);
 
   useEffect(() => {
-    if (section === 'users') loadUsers(usersPage, usersQuery);
-  }, [section, usersPage, usersQuery, loadUsers]);
+    if (section === 'users')   loadUsers(usersPage, usersQuery);
+    if (section === 'blocked') loadBlocked();
+    if (section === 'reports')      loadReports();
+    if (section === 'appeals')      loadAppeals();
+    if (section === 'applications') loadApplications();
+  }, [section, usersPage, usersQuery, loadUsers, loadReports, loadAppeals, loadApplications]);
+
+  const loadBlocked = async () => {
+    if (!isAdmin) return;
+    try {
+      const res = await axios.get(`${API}/admin/blocked`);
+      setBlockedList(res.data);
+    } catch (e) { /* ignore */ }
+  };
+
+  const unblock = async (userId, blockedId) => {
+    try {
+      await axios.put(`${API}/admin/users/${userId}/unblock/${blockedId}`);
+      await loadBlocked();
+      // optional: refresh users list
+      loadUsers(usersPage, usersQuery);
+    } catch (e) { /* ignore */ }
+  };
 
   const claimFirst = async () => {
     setClaiming(true); setClaimError('');
@@ -205,7 +298,7 @@ export default function Admin() {
     <div className="h-screen bg-ink-900 flex flex-col overflow-hidden">
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary-800 via-primary-700 to-primary-600 text-white shadow-lg flex-shrink-0">
+      <div className="bg-ink-900 border-b-2 border-primary-500/50 text-white shadow-lg flex-shrink-0">
         <div className="max-w-6xl mx-auto flex items-center gap-3 px-4 py-4">
           <button
             onClick={() => navigate('/')}
@@ -358,7 +451,7 @@ export default function Admin() {
                   {users.map((u) => (
                     <div key={u._id} className={`bg-white/[0.05] backdrop-blur-xl rounded-2xl border border-white/10 p-4 shadow-sm ${u.isBanned ? 'opacity-60' : ''}`}>
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+                        <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-ink-950 font-bold flex-shrink-0">
                           {u.username?.[0]?.toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -413,7 +506,7 @@ export default function Admin() {
                         <tr key={u._id} className={`hover:bg-white/[0.04] transition ${u.isBanned ? 'opacity-60' : ''}`}>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                              <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-ink-950 text-xs font-bold flex-shrink-0">
                                 {u.username?.[0]?.toUpperCase()}
                               </div>
                               <div>
@@ -529,6 +622,166 @@ export default function Admin() {
               </div>
             )}
 
+            {/* ── Reports ── */}
+            {section === 'reports' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-white hidden md:block">Reports</h2>
+                  <ActionBtn onClick={loadReports} variant="default">Refresh</ActionBtn>
+                </div>
+                {reportsLoading && <p className="text-white/40 text-sm py-4">Loading…</p>}
+                {!reportsLoading && reports.length === 0 && (
+                  <div className="bg-white/[0.03] border border-white/8 rounded-xl p-6 text-center">
+                    <p className="text-white/40 text-sm">No pending reports. All clear.</p>
+                  </div>
+                )}
+                {reports.map((r) => (
+                  <div key={r._id} className="bg-white/[0.03] border border-white/8 rounded-xl p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-white font-semibold text-sm">
+                          @{r.reporter?.username} → @{r.reported?.username}
+                        </p>
+                        <p className="text-white/50 text-xs mt-0.5">
+                          {r.reason.replace('_', ' ')} · {new Date(r.createdAt).toLocaleDateString()}
+                        </p>
+                        {r.description && (
+                          <p className="text-white/60 text-xs mt-2 bg-white/5 rounded-lg px-3 py-2 leading-relaxed">
+                            "{r.description}"
+                          </p>
+                        )}
+                      </div>
+                      <Badge color={r.reported?.isBanned ? 'red' : r.reported?.accountStatus === 'warned' ? 'yellow' : 'gray'}>
+                        {r.reported?.isBanned ? 'banned' : r.reported?.accountStatus}
+                      </Badge>
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      <ActionBtn onClick={() => reviewReport(r._id, 'dismiss')} variant="default">Dismiss</ActionBtn>
+                      <ActionBtn onClick={() => reviewReport(r._id, 'warn')} variant="warn">Warn user</ActionBtn>
+                      <ActionBtn
+                        onClick={() => setRemoveTarget(r)}
+                        variant="danger"
+                        disabled={r.reported?.isBanned}
+                      >
+                        Remove from Unddr
+                      </ActionBtn>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* ── Appeals ── */}
+            {section === 'appeals' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-white hidden md:block">Appeals</h2>
+                  <ActionBtn onClick={loadAppeals} variant="default">Refresh</ActionBtn>
+                </div>
+                {appealsLoading && <p className="text-white/40 text-sm py-4">Loading…</p>}
+                {!appealsLoading && appeals.length === 0 && (
+                  <div className="bg-white/[0.03] border border-white/8 rounded-xl p-6 text-center">
+                    <p className="text-white/40 text-sm">No pending appeals.</p>
+                  </div>
+                )}
+                {appeals.map((u) => (
+                  <div key={u._id} className="bg-white/[0.03] border border-white/8 rounded-xl p-4 space-y-3">
+                    <div>
+                      <p className="text-white font-semibold text-sm">@{u.username}</p>
+                      <p className="text-white/40 text-xs mt-0.5">
+                        Removed for: {u.removalReason || 'Not specified'} ·
+                        Appeal filed {u.appealSubmittedAt ? new Date(u.appealSubmittedAt).toLocaleDateString() : ''}
+                      </p>
+                      {u.appealMessage && (
+                        <div className="mt-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2.5">
+                          <p className="text-white/25 text-[10px] uppercase tracking-wide mb-1">Their appeal</p>
+                          <p className="text-white/70 text-sm leading-relaxed">"{u.appealMessage}"</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <ActionBtn onClick={() => restoreUser(u._id)} variant="primary">Restore account</ActionBtn>
+                      <ActionBtn onClick={() => rejectAppeal(u._id)} variant="danger">Reject appeal</ActionBtn>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* ── Applications ── */}
+            {section === 'applications' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-white hidden md:block">
+                    Invite Applications
+                    {applications.length > 0 && <span className="ml-2 text-sm font-normal text-white/40">({applications.length} pending)</span>}
+                  </h2>
+                  <ActionBtn onClick={loadApplications} variant="default">Refresh</ActionBtn>
+                </div>
+                {applicationsLoading && <p className="text-white/40 text-sm py-4">Loading…</p>}
+                {!applicationsLoading && applications.length === 0 && (
+                  <div className="bg-white/[0.03] border border-white/8 rounded-xl p-6 text-center">
+                    <p className="text-white/40 text-sm">No pending applications.</p>
+                  </div>
+                )}
+                {applications.map((a) => (
+                  <div key={a._id} className="bg-white/[0.03] border border-white/8 rounded-xl p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                      <div className="space-y-0.5">
+                        <p className="text-white font-semibold text-sm">{a.name}</p>
+                        <p className="text-white/50 text-xs">{a.email} · {a.phone}</p>
+                        <p className="text-primary-300 text-xs font-medium">
+                          {a.platform}: {a.social}
+                        </p>
+                        {a.why && (
+                          <div className="mt-2 bg-white/5 rounded-lg px-3 py-2 text-white/60 text-xs leading-relaxed">
+                            "{a.why}"
+                          </div>
+                        )}
+                        <p className="text-white/25 text-[10px] pt-1">
+                          {new Date(a.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Badge color="yellow">pending</Badge>
+                    </div>
+                    <div className="flex gap-2">
+                      <ActionBtn onClick={() => reviewApplication(a._id, 'approve')} variant="primary">Approve</ActionBtn>
+                      <ActionBtn onClick={() => reviewApplication(a._id, 'reject')} variant="danger">Reject</ActionBtn>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* ── Blocked ── */}
+            {section === 'blocked' && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold text-white hidden md:block">Blocked Users</h2>
+                <p className="text-white/60 text-sm">View users who have blocked others. You can remove blocks here.</p>
+                <div className="space-y-3">
+                  {blockedList.length === 0 && (
+                    <p className="text-white/40 py-6">No blocked relationships found.</p>
+                  )}
+                  {blockedList.map((u) => (
+                    <div key={u._id} className="bg-white/[0.03] border border-white/8 rounded-xl p-3 flex items-start justify-between">
+                      <div>
+                        <p className="font-semibold text-white">{u.username}</p>
+                        <p className="text-white/60 text-sm">Blocked {u.blocked.length} user(s)</p>
+                        <div className="mt-2 flex gap-2 flex-wrap">
+                          {u.blocked.map((b) => (
+                            <div key={b._id} className="bg-white/5 px-2 py-1 rounded-full text-sm flex items-center gap-2">
+                              <span className="font-medium text-white/90">{b.username}</span>
+                              <button onClick={() => unblock(u._id, b._id)} className="text-xs text-red-400 hover:underline">Unblock</button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
           </div>
         </main>
       </div>
@@ -539,6 +792,37 @@ export default function Admin() {
           onConfirm={() => deleteUser(pendingDelete._id)}
           onCancel={() => setPendingDelete(null)}
         />
+      )}
+
+      {removeTarget && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+          <div className="bg-ink-800 border border-white/10 rounded-2xl shadow-xl p-6 max-w-sm w-full space-y-4">
+            <p className="text-white font-semibold">Remove @{removeTarget.reported?.username}?</p>
+            <p className="text-white/40 text-sm">They will be banned and notified. They can appeal once.</p>
+            <div>
+              <label className="text-white/60 text-xs font-semibold uppercase tracking-wide block mb-1.5">Reason (shown to user)</label>
+              <textarea
+                value={removeReason}
+                onChange={(e) => setRemoveReason(e.target.value)}
+                rows={3}
+                placeholder="e.g. Repeated hostile behaviour toward other members"
+                className="w-full bg-ink-900 border border-white/10 text-white rounded-xl px-3 py-2.5 text-sm outline-none resize-none placeholder-white/25 focus:border-primary-500"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => { setRemoveTarget(null); setRemoveReason(''); }} className="flex-1 border border-white/10 text-white/70 py-2.5 rounded-xl text-sm font-medium hover:bg-white/5 transition">Cancel</button>
+              <button
+                onClick={async () => {
+                  await reviewReport(removeTarget._id, 'remove', { reason: removeReason });
+                  setRemoveTarget(null); setRemoveReason('');
+                }}
+                className="flex-1 bg-error/20 hover:bg-error/30 text-error py-2.5 rounded-xl text-sm font-semibold transition"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

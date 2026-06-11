@@ -49,7 +49,12 @@ router.post('/request/:userId', auth, async (req, res) => {
       sender: { _id: senderId, username: req.user.username },
     });
 
-    res.status(201).json({ status: 'pending', message: 'Friend request sent.' });
+    res.status(201).json({
+      status: 'pending',
+      message: 'Friend request sent.',
+      requestId: existing._id.toString(),
+      isSender: true,
+    });
   } catch (err) {
     if (err.code === 11000) return res.status(409).json({ message: 'Request already exists.' });
     console.error('send-request error:', err);
@@ -169,6 +174,55 @@ router.get('/status/:userId', auth, async (req, res) => {
       isSender: doc.sender.toString() === req.user._id.toString(),
     });
   } catch {
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// ── Block a user ─────────────────────────────────────────────────────────────
+router.post('/block/:userId', auth, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(userId)) return res.status(400).json({ message: 'Invalid user.' });
+    if (req.user._id.toString() === userId) return res.status(400).json({ message: "You can't block yourself." });
+
+    // add to blockedUsers
+    await User.findByIdAndUpdate(req.user._id, { $addToSet: { blockedUsers: userId } });
+
+    // remove any friend requests / friendships between the two
+    await FriendRequest.deleteMany({
+      $or: [
+        { sender: req.user._id, receiver: userId },
+        { sender: userId, receiver: req.user._id },
+      ],
+    });
+
+    res.json({ blocked: true });
+  } catch (err) {
+    console.error('block error:', err);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// ── Unblock a user ───────────────────────────────────────────────────────────
+router.delete('/block/:userId', auth, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(userId)) return res.status(400).json({ message: 'Invalid user.' });
+    await User.findByIdAndUpdate(req.user._id, { $pull: { blockedUsers: userId } });
+    res.json({ blocked: false });
+  } catch (err) {
+    console.error('unblock error:', err);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// ── List blocked users ────────────────────────────────────────────────────────
+router.get('/blocked', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate('blockedUsers', 'username avatar isOnline lastSeen');
+    res.json(user.blockedUsers || []);
+  } catch (err) {
+    console.error('blocked list error:', err);
     res.status(500).json({ message: 'Server error.' });
   }
 });

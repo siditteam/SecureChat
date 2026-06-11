@@ -67,6 +67,15 @@ export default function MediaViewer({ message, isMine, onClose, onViewed }) {
         </button>
 
         <div className="flex items-center gap-2 pointer-events-none">
+          <div className="flex items-center gap-1.5 bg-black/60 rounded-full px-3 py-1.5">
+            <span className="text-white text-xs font-medium">
+              {message.viewOnce
+                ? 'Secure media · view once'
+                : message.mediaType === 'image'
+                  ? 'Secure image'
+                  : 'Secure video'}
+            </span>
+          </div>
           {message.viewOnce && (
             <div className="flex items-center gap-1.5 bg-black/50 rounded-full px-3 py-1.5">
               <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

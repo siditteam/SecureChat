@@ -12,6 +12,13 @@ router.get('/:userId', auth, async (req, res) => {
       return res.status(400).json({ message: 'Invalid user ID' });
     }
 
+    // Block check: if either side has blocked the other, deny
+    const other = await require('../models/User').findById(userId).select('blockedUsers');
+    if (!other) return res.status(404).json({ message: 'User not found' });
+    const meBlocked = (req.user.blockedUsers || []).map(String).includes(userId);
+    const otherBlockedMe = (other.blockedUsers || []).map(String).includes(req.user._id.toString());
+    if (meBlocked || otherBlockedMe) return res.status(403).json({ message: 'Access denied.' });
+
     const { before, limit = 50 } = req.query;
 
     const conditions = [
@@ -24,6 +31,11 @@ router.get('/:userId', auth, async (req, res) => {
       { isDeleted: false },
       {
         $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }],
+      },
+      {
+        $nor: [
+          { viewOnce: true, receiver: req.user._id, mediaViewed: true },
+        ],
       },
     ];
 

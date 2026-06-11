@@ -125,7 +125,7 @@ export default function ActiveCallOverlay() {
             {avatarUrl ? (
               <img src={avatarUrl} alt="" className="relative w-32 h-32 rounded-full object-cover ring-4 ring-primary-500/30 z-10 shadow-2xl" />
             ) : (
-              <div className="relative w-32 h-32 bg-gradient-to-br from-primary-400 to-primary-700 rounded-full flex items-center justify-center text-white text-5xl font-bold ring-4 ring-primary-500/30 z-10 shadow-2xl">
+              <div className="relative w-32 h-32 bg-primary-500 rounded-full flex items-center justify-center text-ink-950 text-5xl font-bold ring-4 ring-primary-500/30 z-10 shadow-2xl">
                 {remoteUser?.username?.[0]?.toUpperCase()}
               </div>
             )}
@@ -191,7 +191,7 @@ export default function ActiveCallOverlay() {
               {avatarUrl ? (
                 <img src={avatarUrl} alt="" className="relative w-28 h-28 rounded-full object-cover ring-4 ring-primary-500/30 z-10" />
               ) : (
-                <div className="relative w-28 h-28 bg-gradient-to-br from-primary-400 to-primary-700 rounded-full flex items-center justify-center text-white text-4xl font-bold ring-4 ring-primary-500/30 z-10">
+                <div className="relative w-28 h-28 bg-primary-500 rounded-full flex items-center justify-center text-ink-950 text-4xl font-bold ring-4 ring-primary-500/30 z-10">
                   {remoteUser?.username?.[0]?.toUpperCase()}
                 </div>
               )}
@@ -216,7 +216,7 @@ export default function ActiveCallOverlay() {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-ink-800">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-700 rounded-full flex items-center justify-center text-white text-xl font-bold">
+            <div className="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center text-ink-950 text-xl font-bold">
               {/* current user initial — provided by auth context indirectly */}
               {isCameraOff ? (
                 <svg className="w-6 h-6 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
