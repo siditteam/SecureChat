@@ -13,7 +13,12 @@ const messageRoutes = require('./src/routes/messages');
 const friendRoutes = require('./src/routes/friends');
 const mediaRoutes = require('./src/routes/media');
 const adminRoutes = require('./src/routes/admin');
+const notificationRoutes = require('./src/routes/notifications');
+const inviteRoutes = require('./src/routes/invites');
+const reportRoutes = require('./src/routes/reports');
+const applyRoutes  = require('./src/routes/apply');
 const initSocket = require('./src/socket');
+const User = require('./src/models/User');
 const Message = require('./src/models/Message');
 
 const app = express();
@@ -23,11 +28,21 @@ const ALLOWED_ORIGINS = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map(u => u.trim().replace(/\/$/, ''))
   : ['http://localhost:5173', 'http://10.0.0.156:5173'];
 
+// Allow *.vercel.app for preview deployments
+const ALLOW_VERCEL_PREVIEWS = process.env.ALLOW_VERCEL_PREVIEWS !== 'false';
+
 console.log('CORS allowed origins:', ALLOWED_ORIGINS);
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  if (ALLOW_VERCEL_PREVIEWS && /^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin)) return true;
+  return false;
+};
 
 const corsOptions = {
   origin: (origin, cb) => {
-    if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    if (isAllowedOrigin(origin)) return cb(null, true);
     console.warn('CORS blocked origin:', origin);
     cb(new Error('Not allowed by CORS'));
   },
@@ -62,10 +77,25 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/invites', inviteRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/apply',   applyRoutes);
 
 app.get('/health', (_, res) => res.json({ status: 'ok' }));
 
 initSocket(io);
+
+// Promote users whose probation has ended — grant 2 invite tokens
+setInterval(async () => {
+  try {
+    const { modifiedCount } = await User.updateMany(
+      { accountStatus: 'probation', probationEndsAt: { $lte: new Date() } },
+      { accountStatus: 'active', inviteTokens: 2 }
+    );
+    if (modifiedCount > 0) console.log(`Promoted ${modifiedCount} user(s) from probation → active`);
+  } catch (err) { console.error('Probation check error:', err); }
+}, 60_000);
 
 // Clean up expired messages every 60 seconds
 setInterval(async () => {

@@ -12,7 +12,7 @@ async function sendSMS(phone, otp) {
   }
 
   await twilioClient.messages.create({
-    body: `Your SecureChat verification code is: ${otp}\n\nValid for 5 minutes. Do not share this code.`,
+    body: `Your UNDDR verification code is: ${otp}\n\nValid for 5 minutes. Do not share this code.`,
     from: process.env.TWILIO_PHONE_NUMBER,
     to: phone,
   });

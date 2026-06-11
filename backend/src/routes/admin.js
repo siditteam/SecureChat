@@ -1,6 +1,8 @@
 const express = require('express');
 const User = require('../models/User');
 const Message = require('../models/Message');
+const Report = require('../models/Report');
+const InviteApplication = require('../models/InviteApplication');
 const auth = require('../middleware/auth');
 const adminMiddleware = require('../middleware/admin');
 
@@ -214,4 +216,154 @@ router.delete('/users/:id', async (req, res) => {
   }
 });
 
+// ── Reports queue ─────────────────────────────────────────────────────────────
+router.get('/reports', async (req, res) => {
+  try {
+    const status = req.query.status || 'pending';
+    const reports = await Report.find({ status })
+      .sort({ createdAt: -1 })
+      .populate('reporter', 'username')
+      .populate('reported', 'username accountStatus isBanned');
+    res.json(reports);
+  } catch { res.status(500).json({ message: 'Server error' }); }
+});
+
+// PUT /api/admin/reports/:id — review: dismiss | warn | remove
+router.put('/reports/:id', async (req, res) => {
+  try {
+    const { action, adminNote } = req.body; // action: 'dismiss' | 'warn' | 'remove'
+    const report = await Report.findById(req.params.id).populate('reported');
+    if (!report) return res.status(404).json({ message: 'Report not found' });
+
+    report.reviewedBy = req.user._id;
+    report.reviewedAt = new Date();
+    report.adminNote = adminNote || '';
+
+    if (action === 'dismiss') {
+      report.status = 'dismissed';
+    } else if (action === 'warn') {
+      report.status = 'warned';
+      await User.findByIdAndUpdate(report.reported._id, { accountStatus: 'warned' });
+    } else if (action === 'remove') {
+      const { reason } = req.body;
+      report.status = 'removed';
+      await User.findByIdAndUpdate(report.reported._id, {
+        isBanned: true,
+        accountStatus: 'removed',
+        removalReason: reason || adminNote || 'Violation of community guidelines',
+        removedAt: new Date(),
+      });
+    } else {
+      return res.status(400).json({ message: 'Invalid action. Use dismiss | warn | remove' });
+    }
+
+    await report.save();
+    res.json({ ok: true, status: report.status });
+  } catch { res.status(500).json({ message: 'Server error' }); }
+});
+
+// ── Appeals ───────────────────────────────────────────────────────────────────
+router.get('/appeals', async (req, res) => {
+  try {
+    const users = await User.find({ accountStatus: 'appealing' })
+      .select('username appealMessage appealSubmittedAt removalReason createdAt')
+      .sort({ appealSubmittedAt: -1 });
+    res.json(users);
+  } catch { res.status(500).json({ message: 'Server error' }); }
+});
+
+// PUT /api/admin/users/:id/restore — accept appeal, restore account
+router.put('/users/:id/restore', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    user.isBanned = false;
+    user.accountStatus = 'active';
+    user.removalReason = null;
+    user.removedAt = null;
+    await user.save();
+    res.json({ user: user.toPublicJSON() });
+  } catch { res.status(500).json({ message: 'Server error' }); }
+});
+
+// PUT /api/admin/users/:id/reject-appeal — reject appeal, keep banned
+router.put('/users/:id/reject-appeal', async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(req.params.id, { accountStatus: 'removed' });
+    res.json({ ok: true });
+  } catch { res.status(500).json({ message: 'Server error' }); }
+});
+
+// ── Invite Applications ────────────────────────────────────────────────────────
+
+// GET /api/admin/applications?status=pending
+router.get('/applications', async (req, res) => {
+  try {
+    const status = req.query.status || 'pending';
+    const apps = await InviteApplication.find({ status })
+      .sort({ createdAt: -1 })
+      .limit(200);
+    res.json(apps);
+  } catch { res.status(500).json({ message: 'Server error' }); }
+});
+
+// PUT /api/admin/applications/:id — approve | reject
+router.put('/applications/:id', async (req, res) => {
+  try {
+    const { action, note } = req.body;
+    const app = await InviteApplication.findById(req.params.id);
+    if (!app) return res.status(404).json({ message: 'Application not found' });
+
+    if (action !== 'approve' && action !== 'reject') {
+      return res.status(400).json({ message: 'Invalid action. Use approve | reject' });
+    }
+
+    app.status = action === 'approve' ? 'approved' : 'rejected';
+    app.reviewNote = note || '';
+    app.reviewedAt = new Date();
+    app.reviewedBy = req.user._id;
+    await app.save();
+
+    res.json({ ok: true, status: app.status });
+  } catch { res.status(500).json({ message: 'Server error' }); }
+});
+
+// PUT /api/admin/users/:id/promote — manually graduate from probation
+router.put('/users/:id/promote', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    user.accountStatus = 'active';
+    user.probationEndsAt = null;
+    if (user.inviteTokens === 0) user.inviteTokens = 2;
+    await user.save();
+    res.json({ user: user.toPublicJSON() });
+  } catch { res.status(500).json({ message: 'Server error' }); }
+});
+
 module.exports = router;
+
+// ── Blocked users management (admin) ────────────────────────────────────────
+router.get('/blocked', async (req, res) => {
+  try {
+    const rows = await User.find({ blockedUsers: { $exists: true, $ne: [] } }).select('username blockedUsers').populate('blockedUsers', 'username');
+    res.json(rows.map((u) => ({ _id: u._id.toString(), username: u.username, blocked: (u.blockedUsers || []).map((b) => ({ _id: b._id.toString(), username: b.username })) })));
+  } catch (err) {
+    console.error('admin blocked list error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.put('/users/:id/unblock/:blockedId', async (req, res) => {
+  try {
+    const { id, blockedId } = req.params;
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    user.blockedUsers = (user.blockedUsers || []).filter((b) => b.toString() !== blockedId.toString());
+    await user.save();
+    res.json({ message: 'Unblocked', user: user.toPublicJSON() });
+  } catch (err) {
+    console.error('admin unblock error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
