@@ -4,11 +4,13 @@ const User = require('./models/User');
 const Message = require('./models/Message');
 const ss = require('./socketState');
 
-webpush.setVapidDetails(
-  process.env.VAPID_EMAIL,
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
+if (process.env.VAPID_EMAIL && process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    process.env.VAPID_EMAIL,
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+}
 
 module.exports = (io) => {
   ss.setIO(io);
