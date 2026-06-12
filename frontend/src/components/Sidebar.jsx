@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { useUnderground } from '../context/UndergroundContext';
 import QRModal from './QRModal';
+import ProfileQRModal from './ProfileQRModal';
 import QRScanner from './QRScanner';
 import ConfirmModal from './ConfirmModal';
 import { useToast } from '../context/ToastContext';
@@ -217,6 +218,9 @@ export default function Sidebar({ selectedUser, onSelectUser, initialChatUserId,
 
   const [tab, setTab] = useState('chats');
   const [showQR, setShowQR] = useState(false);
+  const [showProfileQR, setShowProfileQR] = useState(false);
+  const [showQRMenu, setShowQRMenu] = useState(false);
+  const qrMenuRef = useRef(null);
   const [showScanner, setShowScanner] = useState(false);
   const [reportTarget, setReportTarget] = useState(null);
   const [reportReason, setReportReason] = useState('hostile');
@@ -259,6 +263,16 @@ export default function Sidebar({ selectedUser, onSelectUser, initialChatUserId,
   }, []);
 
   useEffect(() => { loadFriends(); loadIncoming(); }, [loadFriends, loadIncoming]);
+
+  // Close QR dropdown when clicking outside
+  useEffect(() => {
+    if (!showQRMenu) return;
+    const handler = (e) => {
+      if (qrMenuRef.current && !qrMenuRef.current.contains(e.target)) setShowQRMenu(false);
+    };
+    document.addEventListener('pointerdown', handler);
+    return () => document.removeEventListener('pointerdown', handler);
+  }, [showQRMenu]);
   useEffect(() => { if (tab === 'requests') loadOutgoing(); }, [tab, loadOutgoing]);
 
   // Deep link from push notification: auto-open chat with the sender
@@ -486,12 +500,53 @@ export default function Sidebar({ selectedUser, onSelectUser, initialChatUserId,
 
             {/* Actions */}
             <div className="flex items-center gap-0.5">
-              <button onClick={() => setShowQR(true)} title="My invite QR" className="p-2 rounded-lg transition duration-150" style={{ color: 'var(--text-secondary)' }}>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                </svg>
-              </button>
+              {/* QR dropdown */}
+              <div ref={qrMenuRef} style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setShowQRMenu((s) => !s)}
+                  title="QR Code"
+                  className="p-2 rounded-lg transition duration-150"
+                  style={{ color: showQRMenu ? 'var(--accent)' : 'var(--text-secondary)', background: showQRMenu ? 'rgba(10,163,163,0.08)' : 'transparent' }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                  </svg>
+                </button>
+                {showQRMenu && (
+                  <div style={{
+                    position: 'absolute', top: '100%', right: 0, zIndex: 50, marginTop: 4,
+                    background: 'var(--bg-surface)', border: '1px solid var(--card-border)',
+                    borderRadius: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                    overflow: 'hidden', minWidth: 170,
+                  }}>
+                    <button
+                      onClick={() => { setShowProfileQR(true); setShowQRMenu(false); }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 14px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', textAlign: 'left' }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-muted)'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                      </svg>
+                      My QR Code
+                    </button>
+                    <div style={{ height: 1, background: 'var(--card-border)' }} />
+                    <button
+                      onClick={() => { setShowScanner(true); setShowQRMenu(false); }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 14px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', textAlign: 'left' }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-muted)'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0118.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Scan QR Code
+                    </button>
+                  </div>
+                )}
+              </div>
               <button onClick={() => navigate('/settings')} title="Settings" className="p-2 rounded-lg transition duration-150" style={{ color: 'var(--text-secondary)' }}>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -612,7 +667,7 @@ export default function Sidebar({ selectedUser, onSelectUser, initialChatUserId,
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => setShowQR(true)}
+                    onClick={() => setShowProfileQR(true)}
                     className="flex-1 flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition"
                     style={{ background: 'var(--accent)', color: '#fff' }}
                   >
@@ -769,6 +824,7 @@ export default function Sidebar({ selectedUser, onSelectUser, initialChatUserId,
       </div>
 
       {showQR && user && <QRModal user={user} onClose={() => setShowQR(false)} />}
+      {showProfileQR && user && <ProfileQRModal user={user} onClose={() => setShowProfileQR(false)} />}
 
       {/* Report modal */}
       {reportTarget && (
