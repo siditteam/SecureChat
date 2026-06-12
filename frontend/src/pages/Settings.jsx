@@ -800,8 +800,11 @@ export default function Settings() {
               <div className="max-w-lg space-y-5">
                 <h2 className="text-xl font-bold hidden md:block" style={{ color: 'var(--text-primary)' }}>About Unddr</h2>
 
-                <div style={{ display: 'flex', justifyContent: 'center' }}>
-                  <img src="/assets/logo-unddr-teal.svg" alt="Unddr" style={{ width: 200, height: 'auto' }} />
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(10,163,163,0.08)', border: '1.5px solid rgba(10,163,163,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontWeight: 800, fontSize: 22, color: 'var(--accent)', fontFamily: "'Space Grotesk', sans-serif" }}>U</span>
+                  </div>
+                  <span style={{ fontSize: 32, fontWeight: 800, color: 'var(--accent)', fontFamily: "'Space Grotesk', sans-serif", letterSpacing: '-0.03em' }}>UNDDR</span>
                 </div>
                 <p className="text-xs text-center -mt-2" style={{ color: 'var(--text-secondary)', opacity: 0.5 }}>Version 1.0.0</p>
 

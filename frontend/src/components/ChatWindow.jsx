@@ -202,11 +202,7 @@ export default function ChatWindow({ selectedUser, onBack }) {
   if (!selectedUser) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center gap-5 px-6" style={{ background: 'linear-gradient(180deg, var(--bg-deep), var(--bg-muted))', color: 'var(--text-secondary)' }}>
-        <img
-          src="/assets/logo-unddr-teal.svg"
-          alt="Unddr"
-          style={{ width: 280, maxWidth: '90%', height: 'auto' }}
-        />
+        <span style={{ fontSize: 'clamp(48px,12vw,80px)', fontWeight: 800, color: 'var(--accent)', fontFamily: "'Space Grotesk', sans-serif", letterSpacing: '-0.03em', lineHeight: 1 }}>UNDDR</span>
         <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Select a conversation to start messaging</p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--success)', fontSize: 12, background: 'rgba(22,163,74,0.06)', padding: '6px 12px', borderRadius: 999, border: '1px solid rgba(22,163,74,0.12)' }}>
           <svg style={{ width: 16, height: 16, color: 'var(--success)' }} fill="currentColor" viewBox="0 0 24 24">

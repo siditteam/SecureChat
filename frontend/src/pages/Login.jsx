@@ -123,7 +123,14 @@ export default function Login() {
       <div style={{ width: '100%', maxWidth: 400 }}>
 
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img src="/assets/logo-unddr-teal-icon.svg" alt="Unddr" style={{ width: 64, height: 64, borderRadius: 18, marginBottom: 12 }} />
+          <div style={{
+            width: 64, height: 64, borderRadius: 18, marginBottom: 12,
+            background: 'rgba(10,163,163,0.08)', border: '1.5px solid rgba(10,163,163,0.18)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 20px rgba(10,163,163,0.10)',
+          }}>
+            <span style={{ fontWeight: 800, fontSize: 28, color: 'var(--accent)', fontFamily: "'Space Grotesk', sans-serif" }}>U</span>
+          </div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 6px' }}>Welcome back</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 14, margin: 0 }}>Sign in with your phone number</p>
         </div>

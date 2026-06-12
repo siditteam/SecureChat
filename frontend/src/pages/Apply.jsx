@@ -72,7 +72,9 @@ export default function Apply() {
       }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-            <img src="/assets/logo-unddr-teal-icon.svg" alt="Unddr" style={{ width: 32, height: 32, borderRadius: 8 }} />
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(10,163,163,0.10)', border: '1px solid rgba(10,163,163,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ fontWeight: 800, fontSize: 14, color: 'var(--accent)', fontFamily: "'Space Grotesk', sans-serif" }}>U</span>
+            </div>
             <span style={{ fontWeight: 700, fontSize: 18, color: ACCENT, letterSpacing: '-0.02em' }}>UNDDR</span>
           </Link>
           <Link to="/login" style={{
