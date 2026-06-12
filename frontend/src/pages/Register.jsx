@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import OtpInput from '../components/OtpInput';
 
 const RESEND_SECONDS = 30;
+const SAVED_PHONE_KEY = 'unddr:saved_phone';
 
 function Steps({ current }) {
   const labels = ['Phone', 'Verify', 'Username'];
@@ -137,6 +138,7 @@ export default function Register() {
     setLoading(true);
     try {
       await register(phone, verifiedToken, username.trim(), inviteCode || undefined);
+      try { localStorage.setItem(SAVED_PHONE_KEY, phone); } catch {}
       navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed.');

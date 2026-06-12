@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import OtpInput from '../components/OtpInput';
 
 const RESEND_SECONDS = 30;
+const SAVED_PHONE_KEY = 'unddr:saved_phone';
 
 function Steps({ current, labels }) {
   return (
@@ -71,8 +72,12 @@ export default function Login() {
   const alreadyRegistered = location.state?.alreadyRegistered;
   const prefilledPhone = location.state?.phone || '';
 
+  const [savedPhone] = useState(() => {
+    try { return localStorage.getItem(SAVED_PHONE_KEY) || ''; } catch { return ''; }
+  });
+  const [showPhoneInput, setShowPhoneInput] = useState(!savedPhone || !!prefilledPhone);
   const [step, setStep] = useState(0);
-  const [phone, setPhone] = useState(prefilledPhone);
+  const [phone, setPhone] = useState(prefilledPhone || savedPhone);
   const [devOtp, setDevOtp] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -111,6 +116,7 @@ export default function Login() {
         return;
       }
       await login(phone, token);
+      try { localStorage.setItem(SAVED_PHONE_KEY, phone); } catch {}
       navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Verification failed.');
@@ -152,7 +158,38 @@ export default function Login() {
             </div>
           )}
 
-          {step === 0 && (
+          {step === 0 && !showPhoneInput && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{
+                padding: '14px 16px', borderRadius: 12,
+                background: 'var(--bg-muted)', border: '1px solid var(--card-border)',
+                display: 'flex', alignItems: 'center', gap: 12,
+              }}>
+                <div style={{
+                  width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
+                  background: 'rgba(10,163,163,0.10)', border: '1px solid rgba(10,163,163,0.20)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--accent)', fontFamily: "'Space Grotesk', sans-serif" }}>U</span>
+                </div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <p style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Remembered device</p>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{savedPhone}</p>
+                </div>
+              </div>
+              <button onClick={doSendOtp} disabled={loading} style={primaryBtn(loading)}>
+                {loading ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Spinner /> Sending…</span> : 'Continue →'}
+              </button>
+              <button
+                onClick={() => { setShowPhoneInput(true); setPhone(''); try { localStorage.removeItem(SAVED_PHONE_KEY); } catch {} }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500, padding: '4px 0', textAlign: 'center' }}
+              >
+                Not you? Sign in differently
+              </button>
+            </div>
+          )}
+
+          {step === 0 && showPhoneInput && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label style={{ display: 'block', color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Phone number</label>
