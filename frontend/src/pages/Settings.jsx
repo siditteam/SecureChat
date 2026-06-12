@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { subscribeToPush, unsubscribeFromPush, getPermissionStatus, isPushSupported } from '../utils/pushNotifications';
+import PaywallModal from '../components/PaywallModal';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -53,6 +54,7 @@ const NAV = [
   { id: 'security',      icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', label: 'Security' },
   { id: 'notifications', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9', label: 'Notifications' },
   { id: 'blocked',       icon: 'M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z', label: 'Blocked' },
+  { id: 'plan',          icon: 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z', label: 'Plan' },
   { id: 'about',         icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', label: 'About' },
 ];
 
@@ -79,6 +81,31 @@ export default function Settings() {
   const [pushPermission, setPushPermission] = useState(() => getPermissionStatus());
   const [pushLoading, setPushLoading] = useState(false);
   const pushSupported = isPushSupported();
+  const [paywallFeature, setPaywallFeature] = useState(null);
+
+  // Key backup / restore
+  const [showKey, setShowKey] = useState(false);
+  const [importKeyText, setImportKeyText] = useState('');
+  const [importStatus, setImportStatus] = useState(''); // 'ok' | 'error' | ''
+
+  const copyKey = useCallback(() => {
+    const k = localStorage.getItem('privateKey');
+    if (!k) return;
+    navigator.clipboard.writeText(k).then(() => toast.success('Key copied'));
+  }, [toast]);
+
+  const restoreKey = useCallback(() => {
+    try {
+      const parsed = JSON.parse(importKeyText.trim());
+      if (!parsed.kty) throw new Error('Invalid key format');
+      localStorage.setItem('privateKey', JSON.stringify(parsed));
+      setImportStatus('ok');
+      setImportKeyText('');
+      toast.success('Key restored — reload the app to decrypt messages');
+    } catch {
+      setImportStatus('error');
+    }
+  }, [importKeyText, toast]);
 
   const handleEnablePush = useCallback(async () => {
     setPushLoading(true);
@@ -365,7 +392,8 @@ export default function Settings() {
 
                 <button
                   onClick={() => { logout(); navigate('/login'); }}
-                  className="w-full border-2 border-error text-error hover:bg-error hover:text-white py-3 rounded-xl font-semibold transition"
+                  className="w-full border-2 border-error text-error hover:bg-error py-3 rounded-xl font-semibold transition"
+                  style={{ color: 'var(--text-on-accent, #fff)' }}
                 >
                   Log Out
                 </button>
@@ -427,22 +455,89 @@ export default function Settings() {
                   </div>
                 </SectionCard>
 
+                {/* Key backup */}
                 <SectionCard>
-                  <div className="px-5 py-4">
-                    <p className="text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Your public key</p>
-                    <p className="text-xs mb-2" style={{ color: 'var(--text-secondary)' }}>Share this fingerprint to verify your identity with friends.</p>
-                    <div className="rounded-xl p-3" style={{ background: 'var(--bg-muted)', border: '1px solid var(--card-border)' }}>
-                      <p className="font-mono text-[11px] break-all leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                        {user?.publicKey ? user.publicKey.slice(0, 120) + '…' : 'Key not available'}
-                      </p>
+                  <div className="px-5 py-5">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div>
+                        <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Back up your encryption key</p>
+                        <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                          Your private key lives only in this browser. Copy it and store it somewhere safe — you'll need it to read your messages on another device.
+                        </p>
+                      </div>
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: '3px 7px', borderRadius: 999, flexShrink: 0, background: localStorage.getItem('privateKey') ? 'rgba(22,163,74,0.10)' : 'rgba(239,68,68,0.10)', color: localStorage.getItem('privateKey') ? '#16A34A' : '#dc2626' }}>
+                        {localStorage.getItem('privateKey') ? 'KEY PRESENT' : 'NO KEY'}
+                      </span>
                     </div>
+                    {localStorage.getItem('privateKey') ? (
+                      <>
+                        <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--card-border)' }}>
+                          <div className="flex items-center justify-between px-3 py-2" style={{ background: 'var(--bg-muted)', borderBottom: '1px solid var(--card-border)' }}>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Private key</span>
+                            <button onClick={() => setShowKey(s => !s)} style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600 }}>
+                              {showKey ? 'Hide' : 'Reveal'}
+                            </button>
+                          </div>
+                          {showKey ? (
+                            <textarea
+                              readOnly
+                              value={localStorage.getItem('privateKey') || ''}
+                              rows={4}
+                              style={{ width: '100%', fontFamily: 'monospace', fontSize: 10, background: 'var(--bg-surface)', border: 'none', padding: '10px 12px', color: 'var(--text-secondary)', resize: 'none', outline: 'none', boxSizing: 'border-box' }}
+                            />
+                          ) : (
+                            <div style={{ padding: '10px 12px', fontFamily: 'monospace', fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.15em' }}>
+                              {"•".repeat(40)}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          onClick={copyKey}
+                          className="mt-3 w-full py-2.5 rounded-xl text-sm font-semibold transition"
+                          style={{ background: 'var(--accent)', color: '#fff' }}
+                        >
+                          Copy key to clipboard
+                        </button>
+                        <p className="mt-2 text-[11px] text-center" style={{ color: 'var(--text-secondary)', opacity: 0.6 }}>
+                          Keep this private. Anyone with this key can decrypt your messages.
+                        </p>
+                      </>
+                    ) : (
+                      <div className="rounded-xl px-4 py-3 text-sm" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', color: '#dc2626' }}>
+                        No private key on this device. You can restore one below.
+                      </div>
+                    )}
                   </div>
                 </SectionCard>
 
+                {/* Key restore */}
                 <SectionCard>
-                  <div className="px-5 py-4">
-                    <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>Active session</p>
-                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Logged in on this device. Log out to end this session. Each device gets its own encryption key pair.</p>
+                  <div className="px-5 py-5">
+                    <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>Restore key from backup</p>
+                    <p className="text-xs mb-3 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                      Paste a key you copied from another device to decrypt your message history here.
+                    </p>
+                    <textarea
+                      value={importKeyText}
+                      onChange={e => { setImportKeyText(e.target.value); setImportStatus(''); }}
+                      rows={4}
+                      placeholder='Paste your key here (starts with {"kty":...)'
+                      style={{ width: '100%', fontFamily: 'monospace', fontSize: 11, background: 'var(--bg-muted)', border: `1px solid ${importStatus === 'error' ? 'rgba(239,68,68,0.5)' : importStatus === 'ok' ? 'rgba(22,163,74,0.4)' : 'var(--card-border)'}`, borderRadius: 10, padding: '10px 12px', color: 'var(--text-primary)', resize: 'none', outline: 'none', boxSizing: 'border-box' }}
+                    />
+                    {importStatus === 'error' && (
+                      <p className="mt-1 text-xs" style={{ color: '#dc2626' }}>Invalid key format. Make sure you copied the full key.</p>
+                    )}
+                    {importStatus === 'ok' && (
+                      <p className="mt-1 text-xs" style={{ color: '#16A34A' }}>Key restored. Reload the page to decrypt your messages.</p>
+                    )}
+                    <button
+                      onClick={restoreKey}
+                      disabled={!importKeyText.trim()}
+                      className="mt-3 w-full py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-40"
+                      style={{ background: 'var(--bg-muted)', color: 'var(--text-primary)', border: '1px solid var(--card-border)' }}
+                    >
+                      Restore key
+                    </button>
                   </div>
                 </SectionCard>
               </div>
@@ -566,6 +661,56 @@ export default function Settings() {
               </div>
             )}
 
+            {/* ── Plan ── */}
+            {section === 'plan' && (
+              <div className="max-w-lg space-y-5">
+                <h2 className="text-xl font-bold hidden md:block" style={{ color: 'var(--text-primary)' }}>Plan</h2>
+
+                <SectionCard>
+                  <div className="px-5 py-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Current plan</p>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                        {user?.plan === 'paid' ? 'Paid — full access' : 'Free — community access'}
+                      </p>
+                    </div>
+                    <span style={{
+                      fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
+                      padding: '4px 10px', borderRadius: 999,
+                      background: user?.plan === 'paid' ? 'rgba(254,238,5,0.12)' : 'rgba(15,23,36,0.07)',
+                      color: user?.plan === 'paid' ? '#92400e' : 'var(--text-secondary)',
+                      border: user?.plan === 'paid' ? '1px solid rgba(254,238,5,0.3)' : '1px solid var(--card-border)',
+                    }}>
+                      {user?.plan === 'paid' ? '✦ Paid' : 'Free'}
+                    </span>
+                  </div>
+                </SectionCard>
+
+                {user?.plan !== 'paid' && (
+                  <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--card-border)', borderRadius: 16, overflow: 'hidden' }}>
+                    <div style={{ background: 'rgba(254,238,5,0.04)', borderBottom: '1px solid var(--card-border)', padding: '16px 20px' }}>
+                      <p style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)', margin: '0 0 4px' }}>Unddr Paid — coming soon</p>
+                      <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>Unlock Teams, vanity handles, and priority support.</p>
+                    </div>
+                    <div style={{ padding: '16px 20px' }}>
+                      {['Teams & group spaces', 'Vanity @handle', 'Priority support', 'Early feature access'].map((item) => (
+                        <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, fontSize: 13, color: 'var(--text-secondary)' }}>
+                          <span style={{ color: '#16a34a', fontWeight: 700 }}>✓</span>
+                          {item}
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => setPaywallFeature('Unddr Paid')}
+                        style={{ marginTop: 8, width: '100%', background: 'var(--accent)', color: '#fff', fontWeight: 700, borderRadius: 12, padding: '12px 0', border: 'none', fontSize: 14, cursor: 'pointer' }}
+                      >
+                        Create Team (paid)
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* ── About ── */}
             {section === 'about' && (
               <div className="max-w-lg space-y-5">
@@ -597,6 +742,10 @@ export default function Settings() {
           </div>
         </main>
       </div>
+
+      {paywallFeature && (
+        <PaywallModal feature={paywallFeature} onClose={() => setPaywallFeature(null)} />
+      )}
     </div>
   );
 }

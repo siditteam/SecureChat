@@ -33,14 +33,14 @@ function SnapCard({ message, isMine, localViewed, onTap }) {
         </div>
         <div className="text-left min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] uppercase tracking-[0.24em] font-semibold text-white/60">
+            <span className="text-[10px] uppercase tracking-[0.24em] font-semibold" style={{ color: 'var(--text-secondary)' }}>
               {secureLabel}
             </span>
           </div>
           <p className={`text-sm font-semibold ${isVideo ? 'text-purple-300' : 'text-primary-300'}`}>
             {isVideo ? 'Video' : 'Photo'}
           </p>
-          <p className="text-white/50 text-xs truncate">
+          <p className="truncate" style={{ color: 'var(--text-secondary)', fontSize: 12 }}>
             {message.viewOnce
               ? (viewed ? 'Opened' : 'View once · sent')
               : 'Tap to view'}
@@ -52,21 +52,21 @@ function SnapCard({ message, isMine, localViewed, onTap }) {
 
   if (cannotReopen) {
     return (
-      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl w-52 bg-white/10 border border-white/10">
-        <div className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
+      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl w-52" style={{ background: 'var(--card-base)', border: `1px solid var(--card-border)` }}>
+        <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(15,23,36,0.04)' }}>
           {isVideo
-            ? <VideoIcon className="w-4.5 h-4.5 text-white/50" style={{width:'18px',height:'18px'}} />
-            : <CameraIcon className="w-4.5 h-4.5 text-white/50" style={{width:'18px',height:'18px'}} />
+            ? <VideoIcon className="w-4.5 h-4.5" style={{ width: '18px', height: '18px', color: 'var(--text-secondary)' }} />
+            : <CameraIcon className="w-4.5 h-4.5" style={{ width: '18px', height: '18px', color: 'var(--text-secondary)' }} />
           }
         </div>
         <div className="text-left">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] uppercase tracking-[0.24em] font-semibold text-white/60">
+            <span className="text-[10px] uppercase tracking-[0.24em] font-semibold" style={{ color: 'var(--text-secondary)' }}>
               {secureLabel}
             </span>
           </div>
-          <p className="text-white/70 text-sm font-medium">{isVideo ? 'Video' : 'Photo'}</p>
-          <p className="text-white/40 text-xs">Opened</p>
+          <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{isVideo ? 'Video' : 'Photo'}</p>
+          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Opened</p>
         </div>
       </div>
     );
@@ -83,13 +83,13 @@ function SnapCard({ message, isMine, localViewed, onTap }) {
     >
       <div className="w-10 h-10 rounded-full bg-white/30 flex items-center justify-center flex-shrink-0 backdrop-blur">
         {isVideo
-          ? <VideoIcon className="w-5 h-5 text-white" />
-          : <CameraIcon className="w-5 h-5 text-white" />
+          ? <VideoIcon className="w-5 h-5" style={{ color: 'var(--text-on-gradient, #fff)' }} />
+          : <CameraIcon className="w-5 h-5" style={{ color: 'var(--text-on-gradient, #fff)' }} />
         }
       </div>
       <div className="text-left">
-        <p className="text-white text-sm font-bold">New {isVideo ? 'Video' : 'Photo'}</p>
-        <p className="text-white/80 text-xs">
+        <p style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 700 }}>New {isVideo ? 'Video' : 'Photo'}</p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 12 }}>
           {message.viewOnce ? 'View once · tap to open' : 'Tap to view'}
         </p>
       </div>
@@ -148,9 +148,9 @@ export default function Message({ message, isMine }) {
         <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1`}>
           <div className="relative">
             {message.expiresAt && (
-              <span className="absolute -top-2 -right-1 z-10 bg-error text-white text-[9px] px-1.5 py-0.5 rounded-full font-semibold">
-                {countdown != null ? `${countdown}s` : '⏱'}
-              </span>
+              <span className="absolute -top-2 -right-1 z-10 bg-error text-[9px] px-1.5 py-0.5 rounded-full font-semibold" style={{ color: 'var(--on-error, #fff)' }}>
+                  {countdown != null ? `${countdown}s` : '⏱'}
+                </span>
             )}
 
             <SnapCard
@@ -164,9 +164,9 @@ export default function Message({ message, isMine }) {
 
             <div className={`flex flex-col gap-1 mt-1 px-1 ${isMine ? 'items-end' : 'items-start'}`}>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-white/30">{time}</span>
+                <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{time}</span>
                 {(message.expiresAt || message.viewOnce) && (
-                  <span className="text-[10px] text-white/80 bg-white/10 rounded-full px-2 py-0.5 uppercase tracking-[0.12em]">
+                  <span className="text-[10px]" style={{ color: 'var(--text-primary)', background: 'rgba(15,23,36,0.04)', padding: '2px 8px', borderRadius: '999px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     {message.viewOnce ? 'View once' : 'Disappears soon'}
                   </span>
                 )}
@@ -188,21 +188,32 @@ export default function Message({ message, isMine }) {
     );
   }
 
+  // Message from a different encryption session — key mismatch
+  if (message.content === '[Encrypted]' || message.content === '[No private key]') {
+    return (
+      <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-0.5`}>
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style={{ background: 'rgba(15,23,36,0.04)', border: '1px solid rgba(15,23,36,0.08)' }}>
+          <svg style={{ width: 11, height: 11, color: 'var(--text-secondary)', flexShrink: 0, opacity: 0.5 }} fill="currentColor" viewBox="0 0 24 24">
+            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" />
+          </svg>
+          <span style={{ fontSize: 11, color: 'var(--text-secondary)', opacity: 0.6 }}>Message locked · different session key</span>
+          <span style={{ fontSize: 10, color: 'var(--text-secondary)', opacity: 0.4 }}>{time}</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-0.5`}>
-      <div className={`relative max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm ${
-        isMine
-          ? 'bg-primary-500 text-ink-950 rounded-br-none'
-          : 'bg-white/10 text-white rounded-bl-none border border-white/10 backdrop-blur-sm'
-      }`}>
+      <div className={`relative max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm ${isMine ? 'rounded-br-none' : 'rounded-bl-none'}`} style={isMine ? { background: 'var(--accent)', color: 'var(--text-primary)' } : { background: 'var(--card-base)', color: 'var(--text-primary)', border: '1px solid var(--card-border)', backdropFilter: 'blur(6px)' }}>
         {message.expiresAt && (
-          <span className="absolute -top-2 -right-1 bg-error text-white text-[9px] px-1.5 py-0.5 rounded-full font-semibold">
+          <span className="absolute -top-2 -right-1 bg-error text-[9px] px-1.5 py-0.5 rounded-full font-semibold" style={{ color: 'var(--on-error, #fff)' }}>
             {countdown != null ? `${countdown}s` : '⏱'}
           </span>
         )}
         <p className="text-sm break-words whitespace-pre-wrap pr-14">{message.content}</p>
         <div className="absolute bottom-1.5 right-2 flex items-center gap-1">
-          <span className={`text-[10px] ${isMine ? 'text-ink-950/60' : 'text-white/40'}`}>{time}</span>
+          <span className="text-[10px]" style={{ color: isMine ? 'rgba(15,23,36,0.6)' : 'var(--text-secondary)' }}>{time}</span>
           {isMine && <Ticks status={message.deliveryStatus} />}
         </div>
       </div>

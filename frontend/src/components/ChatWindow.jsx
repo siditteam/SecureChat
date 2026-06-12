@@ -38,7 +38,7 @@ function Avatar({ name, online, size = 'md' }) {
 
   return (
     <div className="relative flex-shrink-0">
-      <div className={`${sz} bg-gradient-to-br ${colors[colorIndex]} rounded-full flex items-center justify-center text-white font-bold shadow-md`}>
+      <div className={`${sz} bg-gradient-to-br ${colors[colorIndex]} rounded-full flex items-center justify-center font-bold shadow-md`} style={{ color: 'var(--text-on-accent, #fff)' }}>
         {name[0].toUpperCase()}
       </div>
       {online && (
@@ -301,6 +301,18 @@ export default function ChatWindow({ selectedUser, onBack }) {
           <div className="text-center text-sm py-12" style={{ color: 'var(--text-secondary)' }}>
             <p className="font-medium">No messages yet</p>
             <p className="text-xs mt-1" style={{ opacity: 0.6 }}>Say hello! 👋</p>
+          </div>
+        )}
+
+        {!loading && messages.some(m => m.content === '[Encrypted]' || m.content === '[No private key]') && (
+          <div className="mx-2 mb-2 px-4 py-3 rounded-xl flex items-start gap-3" style={{ background: 'rgba(234,179,8,0.06)', border: '1px solid rgba(234,179,8,0.18)' }}>
+            <svg style={{ width: 15, height: 15, color: 'rgba(161,128,0,0.8)', flexShrink: 0, marginTop: 1 }} fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" />
+            </svg>
+            <p style={{ fontSize: 12, color: 'rgba(120,90,0,0.85)', lineHeight: 1.6 }}>
+              Some messages were encrypted with a different session key.
+              Go to <strong>Settings → Security</strong> to restore your key from another device.
+            </p>
           </div>
         )}
 
