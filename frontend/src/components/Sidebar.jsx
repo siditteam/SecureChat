@@ -203,7 +203,7 @@ function FriendRow({ u, online, lastSeen, action, onAction, onMessage, isSelecte
   );
 }
 
-export default function Sidebar({ selectedUser, onSelectUser }) {
+export default function Sidebar({ selectedUser, onSelectUser, initialChatUserId, onInitialChatHandled }) {
   const { user, logout } = useAuth();
   const { socket, connected } = useSocket();
   const { underground, toggleUnderground } = useUnderground();
@@ -260,6 +260,16 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
 
   useEffect(() => { loadFriends(); loadIncoming(); }, [loadFriends, loadIncoming]);
   useEffect(() => { if (tab === 'requests') loadOutgoing(); }, [tab, loadOutgoing]);
+
+  // Deep link from push notification: auto-open chat with the sender
+  useEffect(() => {
+    if (!initialChatUserId || friends.length === 0) return;
+    const match = friends.find((f) => f._id === initialChatUserId);
+    if (match) {
+      onSelectUser(match);
+      onInitialChatHandled?.();
+    }
+  }, [initialChatUserId, friends]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const submitReport = async () => {
     if (!reportTarget) return;

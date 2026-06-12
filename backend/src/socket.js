@@ -1,16 +1,8 @@
 const jwt = require('jsonwebtoken');
-const webpush = require('web-push');
 const User = require('./models/User');
 const Message = require('./models/Message');
 const ss = require('./socketState');
-
-if (process.env.VAPID_EMAIL && process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-  webpush.setVapidDetails(
-    process.env.VAPID_EMAIL,
-    process.env.VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
-  );
-}
+const { sendPush } = require('./services/push');
 
 module.exports = (io) => {
   ss.setIO(io);
@@ -83,24 +75,20 @@ module.exports = (io) => {
         } else {
           // Receiver is offline — attempt web push
           try {
-            const receiver = await User.findById(receiverId).select('pushSubscription settings');
-            if (receiver?.pushSubscription && receiver.settings?.notifications !== false) {
-              const senderUser = await User.findById(userId).select('username');
-              await webpush.sendNotification(
-                JSON.parse(receiver.pushSubscription),
-                JSON.stringify({
-                  title: 'TrustChat',
-                  body: hasMedia
-                    ? `${senderUser.username} sent you a ${mediaType || 'file'}`
-                    : `New message from ${senderUser.username}`,
-                  icon: '/assets/logo-unddr-teal-icon.svg',
-                  badge: '/assets/pngs/logo-unddr-icon-128.png',
-                  data: { url: '/' },
-                })
-              );
-            }
+            const [receiver, senderUser] = await Promise.all([
+              User.findById(receiverId).select('pushSubscription settings'),
+              User.findById(userId).select('username'),
+            ]);
+            await sendPush(receiver, {
+              title: senderUser?.username || 'Unddr',
+              body: hasMedia
+                ? `Sent you a ${mediaType || 'file'}`
+                : 'Sent you a message',
+              tag: `msg-${userId}`,
+              data: { url: `/?chat=${userId}` },
+            });
           } catch (pushErr) {
-            if (pushErr.statusCode === 410 || pushErr.statusCode === 404) {
+            if (pushErr.message === 'PUSH_EXPIRED') {
               await User.findByIdAndUpdate(receiverId, { pushSubscription: null });
             }
           }
@@ -132,7 +120,8 @@ module.exports = (io) => {
     socket.on('typing',      ({ receiverId }) => ss.emit(receiverId, 'user_typing',      { userId }));
     socket.on('stop_typing', ({ receiverId }) => ss.emit(receiverId, 'user_stop_typing', { userId }));
 
-    // ── Call Signaling ───────────────────────────────────────────────────────
+    // ── Call Signaling (MVP: audio only; VIDEO_CALLS disabled via VITE_ENABLE_VIDEO) ─────────────
+    // TODO: gate video callType server-side once billing is live
     socket.on('call_offer', ({ targetUserId, offer, callType, callerInfo }) => {
       const targetSocketId = ss.onlineUsers.get(targetUserId);
       if (targetSocketId) {
