@@ -1,7 +1,8 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import { useUnderground } from '../context/UndergroundContext';
 import { encryptMessage } from '../utils/crypto';
 import MediaCapture from './MediaCapture';
 
@@ -19,9 +20,19 @@ const EXPIRY_OPTIONS = [
 export default function MessageInput({ recipient, onSend, onSendMedia }) {
   const { user } = useAuth();
   const { socket } = useSocket();
+  const { underground } = useUnderground();
   const [text, setText] = useState('');
-  const [expiresIn, setExpiresIn] = useState(null);
+  const [expiresIn, setExpiresIn] = useState(() => underground ? 86400 : null);
   const [showTimer, setShowTimer] = useState(false);
+
+  // Sync default expiry when underground mode is toggled
+  const prevUnderground = useRef(underground);
+  useEffect(() => {
+    if (underground !== prevUnderground.current) {
+      setExpiresIn(underground ? 86400 : null);
+      prevUnderground.current = underground;
+    }
+  }, [underground]);
   const [showCapture, setShowCapture] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
@@ -29,7 +40,7 @@ export default function MessageInput({ recipient, onSend, onSendMedia }) {
   const typingTimeout = useRef(null);
 
   const emitTyping = useCallback(() => {
-    if (!socket || !recipient) return;
+    if (!socket || !recipient || underground) return;
     if (!typingRef.current) {
       socket.emit('typing', { receiverId: recipient._id });
       typingRef.current = true;
@@ -39,7 +50,7 @@ export default function MessageInput({ recipient, onSend, onSendMedia }) {
       socket.emit('stop_typing', { receiverId: recipient._id });
       typingRef.current = false;
     }, 2000);
-  }, [socket, recipient]);
+  }, [socket, recipient, underground]);
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
@@ -103,17 +114,14 @@ export default function MessageInput({ recipient, onSend, onSendMedia }) {
 
         {/* Timer picker */}
         {showTimer && (
-          <div className="mb-3 flex items-center gap-2 flex-wrap p-2 bg-white/[0.05] rounded-lg border border-white/10">
-            <span className="text-white/50 text-xs font-medium">Disappear after:</span>
+          <div className="mb-3 flex items-center gap-2 flex-wrap p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <span style={{ color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600 }}>Disappear after:</span>
             {EXPIRY_OPTIONS.map((opt) => (
               <button
                 key={opt.label}
                 onClick={() => { setExpiresIn(opt.value); setShowTimer(false); }}
-                className={`px-3 py-1 rounded-full text-xs font-semibold transition duration-150 ${
-                  expiresIn === opt.value
-                    ? 'bg-primary-500 text-ink-950 shadow-md'
-                    : 'bg-white/10 text-white/60 border border-white/10 hover:bg-white/20'
-                }`}
+                className="px-3 py-1 rounded-full text-xs font-semibold transition duration-150"
+                style={expiresIn === opt.value ? { background: 'var(--accent)', color: 'var(--text-on-accent)', boxShadow: '0 6px 12px rgba(0,0,0,0.08)' } : { background: 'rgba(255,255,255,0.04)', color: 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.06)' }}
               >
                 {opt.label}
               </button>
@@ -127,11 +135,8 @@ export default function MessageInput({ recipient, onSend, onSendMedia }) {
             type="button"
             onClick={() => setShowTimer((s) => !s)}
             title="Set disappear timer"
-            className={`flex-shrink-0 flex flex-col items-center p-2.5 rounded-full transition duration-150 ${
-              expiresIn
-                ? 'text-primary-400 bg-primary-500/20'
-                : 'text-white/40 hover:bg-white/10'
-            }`}
+            className="flex-shrink-0 flex flex-col items-center p-2.5 rounded-full transition duration-150"
+            style={expiresIn ? { color: 'var(--accent)', background: 'rgba(59,130,246,0.08)' } : { color: 'var(--text-secondary)' }}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -145,7 +150,8 @@ export default function MessageInput({ recipient, onSend, onSendMedia }) {
             type="button"
             onClick={() => setShowCapture(true)}
             title="Send photo or video"
-            className="flex-shrink-0 p-2.5 rounded-full text-white/40 hover:text-primary-400 hover:bg-primary-500/20 transition duration-150"
+            className="flex-shrink-0 p-2.5 rounded-full transition duration-150"
+            style={{ color: 'var(--text-secondary)' }}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -160,7 +166,8 @@ export default function MessageInput({ recipient, onSend, onSendMedia }) {
             onChange={(e) => { setText(e.target.value); emitTyping(); }}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSubmit(e)}
             placeholder="Type a message..."
-            className="flex-1 bg-white/10 text-white rounded-full px-4 py-2.5 text-sm outline-none placeholder-white/30 border border-white/10 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition duration-150"
+            className="flex-1 bg-white/10 rounded-full px-4 py-2.5 text-sm outline-none border border-white/10 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition duration-150"
+            style={{ color: 'var(--text-primary)' }}
           />
 
           <button

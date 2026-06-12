@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { useCall } from '../context/CallContext';
+import { useUnderground } from '../context/UndergroundContext';
 import { decryptMessage } from '../utils/crypto';
 import Message from './Message';
 import MessageInput from './MessageInput';
@@ -52,6 +53,7 @@ export default function ChatWindow({ selectedUser, onBack }) {
   const { user } = useAuth();
   const { socket, connected, sendMessage, pendingCount } = useSocket();
   const { initiateCall, callState } = useCall();
+  const { underground } = useUnderground();
   const canCall = callState === 'idle';
   // VIDEO_CALLS is disabled in MVP — set VITE_ENABLE_VIDEO=true to re-enable
   const videoEnabled = import.meta.env.VITE_ENABLE_VIDEO === 'true';
@@ -229,7 +231,7 @@ export default function ChatWindow({ selectedUser, onBack }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <Avatar name={selectedUser.username} online={peerOnline} size="sm" />
+        <Avatar name={selectedUser.username} online={underground ? false : peerOnline} size="sm" />
         <div className="flex-1 min-w-0">
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)', margin: 0 }}>{selectedUser.username}</p>
@@ -238,7 +240,12 @@ export default function ChatWindow({ selectedUser, onBack }) {
             )}
           </div>
           <p style={{ fontSize: 12, opacity: 0.85, color: 'var(--text-secondary)', marginTop: 1 }}>
-            {typing ? '✍️ typing…' : peerOnline ? '🟢 Online' : peerLastSeen ? `Last seen ${formatLastSeen(peerLastSeen)}` : 'Offline'}
+            {underground
+              ? <span style={{ opacity: 0.4, letterSpacing: '0.06em' }}>presence hidden</span>
+              : typing ? '✍️ typing…'
+              : peerOnline ? '🟢 Online'
+              : peerLastSeen ? `Last seen ${formatLastSeen(peerLastSeen)}`
+              : 'Offline'}
           </p>
         </div>
         <div className="flex items-center gap-1 ml-auto">

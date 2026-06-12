@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import { useUnderground } from '../context/UndergroundContext';
 import QRModal from './QRModal';
 import QRScanner from './QRScanner';
 import ConfirmModal from './ConfirmModal';
@@ -12,7 +13,7 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const AVATAR_API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-function Avatar({ name, online, size = 'md', avatarFile = null }) {
+function Avatar({ name, online, size = 'md', avatarFile = null, hidePresence = false }) {
   const sz = size === 'sm' ? 'w-10 h-10 text-sm' : 'w-11 h-11 text-base';
   const colors = [
     'from-blue-400 to-blue-600',
@@ -32,11 +33,11 @@ function Avatar({ name, online, size = 'md', avatarFile = null }) {
             alt=""
             className={`${sz} rounded-full object-cover shadow-md`}
           />
-        : <div className={`${sz} bg-gradient-to-br ${colors[colorIndex]} rounded-full flex items-center justify-center text-white font-bold shadow-md`}>
+        : <div className={`${sz} bg-gradient-to-br ${colors[colorIndex]} rounded-full flex items-center justify-center font-bold shadow-md`} style={{ color: 'var(--text-on-accent, #fff)' }}>
             {name[0].toUpperCase()}
           </div>
       }
-      {online && (
+      {online && !hidePresence && (
         <span className="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full shadow-sm" style={{ border: '2px solid var(--bg-surface)' }} />
       )}
     </div>
@@ -69,7 +70,7 @@ function TabButton({ label, active, badge, onClick }) {
     >
       {label}
       {badge > 0 && (
-        <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-gradient-to-r from-accent-500 to-accent-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 shadow-lg">
+        <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-gradient-to-r from-accent-500 to-accent-600 text-[9px] font-bold rounded-full flex items-center justify-center px-1 shadow-lg" style={{ color: 'var(--text-on-accent, #fff)' }}>
           {badge > 9 ? '9+' : badge}
         </span>
       )}
@@ -79,6 +80,7 @@ function TabButton({ label, active, badge, onClick }) {
 
 function FriendRow({ u, online, lastSeen, action, onAction, onMessage, isSelected, onSelect, onRemove, onBlock, onViewProfile, onReport }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { underground } = useUnderground();
 
   return (
     <div
@@ -89,11 +91,16 @@ function FriendRow({ u, online, lastSeen, action, onAction, onMessage, isSelecte
       }}
     >
       <button type="button" className="flex items-center gap-3 flex-1 min-w-0 text-left" onClick={onSelect}>
-        <Avatar name={u.username} online={online} avatarFile={u.avatar} />
+        <Avatar name={u.username} online={online} avatarFile={u.avatar} hidePresence={underground} />
         <div className="min-w-0">
           <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{u.username}</p>
           <p className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>
-            {online ? <span><span style={{ color: '#10b981' }}>●</span> Online</span> : lastSeen ? `Last seen ${formatSeen(lastSeen)}` : ''}
+            {underground
+              ? <span style={{ opacity: 0.4 }}>●</span>
+              : online
+                ? <span><span style={{ color: '#10b981' }}>●</span> Online</span>
+                : lastSeen ? `Last seen ${formatSeen(lastSeen)}` : ''
+            }
           </p>
         </div>
       </button>
@@ -116,8 +123,9 @@ function FriendRow({ u, online, lastSeen, action, onAction, onMessage, isSelecte
             <button
               type="button"
               onClick={() => onAction?.('reject')}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-white/30 bg-white/5 hover:bg-error/20 hover:text-error transition"
+              className="w-7 h-7 flex items-center justify-center rounded-lg transition"
               title="Decline"
+              style={{ color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.03)' }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -131,8 +139,9 @@ function FriendRow({ u, online, lastSeen, action, onAction, onMessage, isSelecte
           <button
             type="button"
             onClick={() => onAction?.()}
-            className="px-2.5 py-1 rounded-lg text-xs font-medium bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/60 border border-white/10 transition"
+            className="px-2.5 py-1 rounded-lg text-xs font-medium transition"
             title="Withdraw request"
+            style={{ background: 'rgba(255,255,255,0.03)', color: 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.04)' }}
           >
             Withdraw
           </button>
@@ -171,8 +180,9 @@ function FriendRow({ u, online, lastSeen, action, onAction, onMessage, isSelecte
             <button
               type="button"
               onClick={() => setMenuOpen((s) => !s)}
-              className="p-2.5 rounded-xl text-white/60 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+              className="p-2.5 rounded-xl focus:outline-none"
               title="More options"
+              style={{ color: 'var(--text-secondary)' }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v.01M12 12v.01M12 18v.01" />
@@ -196,7 +206,14 @@ function FriendRow({ u, online, lastSeen, action, onAction, onMessage, isSelecte
 export default function Sidebar({ selectedUser, onSelectUser }) {
   const { user, logout } = useAuth();
   const { socket, connected } = useSocket();
+  const { underground, toggleUnderground } = useUnderground();
   const navigate = useNavigate();
+
+  const brandPressTimer = useRef(null);
+  const handleBrandPointerDown = () => {
+    brandPressTimer.current = setTimeout(toggleUnderground, 800);
+  };
+  const handleBrandPointerUp = () => clearTimeout(brandPressTimer.current);
 
   const [tab, setTab] = useState('chats');
   const [showQR, setShowQR] = useState(false);
@@ -420,11 +437,37 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
         {/* Header */}
         <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--card-border)' }}>
           <div className="flex items-center justify-between px-4 py-3">
-            {/* Brand */}
-            <div className="flex items-center gap-2">
-              <img src="/assets/logo-unddr-teal-icon.svg" alt="Unddr" style={{ width: 28, height: 28, borderRadius: 6 }} />
+            {/* Brand — long-press 800ms to toggle underground mode */}
+            <div
+              className="flex items-center gap-2"
+              style={{ cursor: 'default', userSelect: 'none' }}
+              onPointerDown={handleBrandPointerDown}
+              onPointerUp={handleBrandPointerUp}
+              onPointerLeave={handleBrandPointerUp}
+            >
+              <div style={{
+                width: 26, height: 26, borderRadius: 6, flexShrink: 0,
+                background: underground ? 'rgba(0,201,170,0.12)' : 'rgba(10,163,163,0.10)',
+                border: underground ? '1px solid rgba(0,201,170,0.25)' : '1px solid rgba(10,163,163,0.15)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.4s',
+                boxShadow: underground ? '0 0 10px rgba(0,201,170,0.2)' : 'none',
+              }}>
+                <span style={{ fontWeight: 800, fontSize: 13, color: 'var(--accent)', fontFamily: "'Space Grotesk', sans-serif" }}>U</span>
+              </div>
               <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--accent)', letterSpacing: '-0.02em', fontFamily: "'Space Grotesk', sans-serif" }}>UNDDR</span>
-              {user?.isAdmin && (
+              {underground && (
+                <span style={{
+                  fontSize: 7, fontWeight: 700, padding: '2px 5px', borderRadius: 999,
+                  background: 'rgba(0,201,170,0.10)', color: '#00C9AA',
+                  textTransform: 'uppercase', letterSpacing: '0.08em',
+                  border: '1px solid rgba(0,201,170,0.18)',
+                  animation: 'ug-dot 2s ease-in-out infinite',
+                }}>
+                  underground
+                </span>
+              )}
+              {!underground && user?.isAdmin && (
                 <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 999, background: 'rgba(10,163,163,0.12)', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                   Admin
                 </span>
@@ -499,7 +542,7 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
             <div className="flex flex-col gap-1 pt-2">
               <div className="px-3 pb-2">
                 <div className="relative">
-                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-secondary)' }}>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                   <input
@@ -544,7 +587,7 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
             <div className="flex flex-col gap-1 pt-2">
               <div className="px-3 pb-2 flex flex-col gap-2">
                 <div className="relative">
-                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-secondary)' }}>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                   <input

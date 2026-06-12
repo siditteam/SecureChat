@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { CallProvider } from './context/CallContext';
 import { ToastProvider } from './context/ToastContext';
+import { UndergroundProvider } from './context/UndergroundContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Chat from './pages/Chat';
@@ -11,10 +12,12 @@ import InviteLanding from './pages/InviteLanding';
 import Settings from './pages/Settings';
 import Admin from './pages/Admin';
 import Manual from './pages/Manual';
+import InstallApp from './pages/InstallApp';
 import LandingPage from './pages/LandingPage';
 import Apply from './pages/Apply';
 import IncomingCallModal from './components/IncomingCallModal';
 import ActiveCallOverlay from './components/ActiveCallOverlay';
+import UndergroundRitual from './components/UndergroundRitual';
 
 import LoadingOverlay from './components/LoadingOverlay';
 
@@ -93,6 +96,7 @@ function AppRoutes() {
         <Route path="/add/:username" element={<AddFriend />} />
         <Route path="/invite/:code" element={<InviteLanding />} />
         <Route path="/manual" element={<Manual />} />
+        <Route path="/install" element={<InstallApp />} />
         <Route path="/apply" element={<Apply />} />
         <Route path="/" element={<RootRoute />} />
         <Route path="/about" element={<LandingPage />} />
@@ -108,15 +112,18 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <SocketProvider>
-          <CallProvider>
-            <ToastProvider>
-              <AppRoutes />
-            </ToastProvider>
-          </CallProvider>
-        </SocketProvider>
-      </AuthProvider>
+      <UndergroundProvider>
+        <AuthProvider>
+          <SocketProvider>
+            <CallProvider>
+              <ToastProvider>
+                <AppRoutes />
+                <UndergroundRitual />
+              </ToastProvider>
+            </CallProvider>
+          </SocketProvider>
+        </AuthProvider>
+      </UndergroundProvider>
     </BrowserRouter>
   );
 }

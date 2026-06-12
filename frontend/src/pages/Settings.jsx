@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useUnderground } from '../context/UndergroundContext';
 import { subscribeToPush, unsubscribeFromPush, getPermissionStatus, isPushSupported } from '../utils/pushNotifications';
 import PaywallModal from '../components/PaywallModal';
 
@@ -53,6 +54,7 @@ const NAV = [
   { id: 'privacy',       icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z', label: 'Privacy' },
   { id: 'security',      icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', label: 'Security' },
   { id: 'notifications', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9', label: 'Notifications' },
+  { id: 'underground',   icon: 'M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21', label: 'Underground' },
   { id: 'blocked',       icon: 'M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z', label: 'Blocked' },
   { id: 'plan',          icon: 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z', label: 'Plan' },
   { id: 'about',         icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', label: 'About' },
@@ -62,6 +64,7 @@ export default function Settings() {
   const { user, updateUser, logout } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
+  const { underground, toggleUnderground } = useUnderground();
 
   const [section, setSection] = useState('profile');
   const [mobileShowContent, setMobileShowContent] = useState(false);
@@ -262,27 +265,34 @@ export default function Settings() {
 
         {/* Nav sidebar */}
         <aside className={`${mobileShowContent ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-52 flex-shrink-0 overflow-y-auto`} style={{ background: 'var(--bg-surface)', borderRight: '1px solid var(--card-border)' }}>
-          {NAV.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleNavClick(item.id)}
-              className="w-full flex items-center gap-3 px-5 py-4 md:px-4 md:py-3 text-sm font-medium transition"
-              style={{
-                borderBottom: '1px solid var(--card-border)',
-                color: section === item.id ? 'var(--accent)' : 'var(--text-secondary)',
-                background: section === item.id ? 'rgba(10,163,163,0.06)' : 'transparent',
-                borderRight: section === item.id ? '2.5px solid var(--accent)' : '2.5px solid transparent',
-              }}
-            >
-              <svg className="w-5 h-5 md:w-4 md:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-              </svg>
-              <span className="flex-1 text-left">{item.label}</span>
-              <svg className="w-4 h-4 md:hidden" style={{ color: 'var(--card-border)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          ))}
+          {NAV.map((item) => {
+            const isUnderground = item.id === 'underground';
+            const isActive = section === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleNavClick(item.id)}
+                className="w-full flex items-center gap-3 px-5 py-4 md:px-4 md:py-3 text-sm font-medium transition"
+                style={{
+                  borderBottom: '1px solid var(--card-border)',
+                  color: isActive ? 'var(--accent)' : isUnderground && underground ? '#00C9AA' : 'var(--text-secondary)',
+                  background: isActive ? 'rgba(10,163,163,0.06)' : 'transparent',
+                  borderRight: isActive ? '2.5px solid var(--accent)' : '2.5px solid transparent',
+                }}
+              >
+                <svg className="w-5 h-5 md:w-4 md:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                </svg>
+                <span className="flex-1 text-left">{item.label}</span>
+                {isUnderground && underground && !isActive && (
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00C9AA', animation: 'ug-dot 2s ease-in-out infinite', flexShrink: 0 }} />
+                )}
+                <svg className="w-4 h-4 md:hidden" style={{ color: 'var(--card-border)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            );
+          })}
         </aside>
 
         {/* Content */}
@@ -540,6 +550,80 @@ export default function Settings() {
                     </button>
                   </div>
                 </SectionCard>
+              </div>
+            )}
+
+            {/* ── Underground ── */}
+            {section === 'underground' && (
+              <div className="max-w-lg space-y-5">
+                <h2 className="text-xl font-bold hidden md:block" style={{ color: 'var(--text-primary)' }}>Underground Mode</h2>
+
+                {/* Main toggle card */}
+                <div style={{
+                  borderRadius: 16, overflow: 'hidden',
+                  background: underground ? 'rgba(0,201,170,0.04)' : 'var(--card-base)',
+                  border: underground ? '1px solid rgba(0,201,170,0.15)' : '1px solid var(--card-border)',
+                  transition: 'all 0.4s',
+                }}>
+                  <div style={{ padding: '20px 20px 16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{
+                          width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                          background: underground ? 'rgba(0,201,170,0.12)' : 'var(--bg-muted)',
+                          border: underground ? '1px solid rgba(0,201,170,0.25)' : '1px solid var(--card-border)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          transition: 'all 0.4s',
+                        }}>
+                          <span style={{ fontWeight: 800, fontSize: 14, color: 'var(--accent)', fontFamily: "'Space Grotesk', sans-serif" }}>U</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Underground</p>
+                          <p className="text-xs" style={{ color: underground ? '#00C9AA' : 'var(--text-secondary)', transition: 'color 0.3s' }}>
+                            {underground ? 'Active · Privacy enforced' : 'Off'}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={toggleUnderground}
+                        className="relative flex-shrink-0 w-11 h-6 rounded-full transition-colors duration-300 focus:outline-none"
+                        style={{ background: underground ? '#00C9AA' : 'rgba(15,23,36,0.15)' }}
+                      >
+                        <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${underground ? 'translate-x-5' : 'translate-x-0'}`} />
+                      </button>
+                    </div>
+                    <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                      Underground mode changes the app to a deeper, more private experience.
+                      Long-press the UNDDR mark in the sidebar to toggle it from anywhere.
+                    </p>
+                  </div>
+                </div>
+
+                {/* What it does */}
+                <SectionCard>
+                  <div className="px-5 py-4">
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-secondary)' }}>What changes</p>
+                    {[
+                      ['Deep dark theme', 'Near-black background with teal-green accents'],
+                      ['Messages expire in 24h', 'New messages auto-delete after 24 hours by default'],
+                      ['Presence hidden', 'You won\'t see or broadcast online status or last seen'],
+                      ['No typing indicators', 'Your typing is never sent to contacts'],
+                      ['Notifications stay silent', 'Push notifications never include message content'],
+                    ].map(([title, desc]) => (
+                      <div key={title} style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+                        <span style={{ color: underground ? '#00C9AA' : 'var(--text-secondary)', fontWeight: 700, fontSize: 13, flexShrink: 0, marginTop: 1 }}>✓</span>
+                        <div>
+                          <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{title}</p>
+                          <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>{desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </SectionCard>
+
+                <p className="text-xs text-center leading-relaxed" style={{ color: 'var(--text-secondary)', opacity: 0.55 }}>
+                  This preference is stored only on this device.
+                </p>
               </div>
             )}
 
