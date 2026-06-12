@@ -118,7 +118,7 @@ export default function MessageInput({ recipient, onSend, onSendMedia, replyTo, 
 
   return (
     <>
-      <div className="px-3 pt-3 bg-ink-800/90 backdrop-blur-xl border-t border-white/10 shadow-lg" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}>
+      <div className="px-3 pt-3" style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--card-border)', boxShadow: '0 -2px 12px rgba(15,23,36,0.06)', paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}>
         {error && <p className="text-error text-xs mb-2 px-1 font-medium">{error}</p>}
 
         {/* Reply preview bar */}
@@ -130,8 +130,8 @@ export default function MessageInput({ recipient, onSend, onSendMedia, replyTo, 
             marginBottom: 8,
             borderRadius: 10,
             overflow: 'hidden',
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'var(--bg-muted)',
+            border: '1px solid var(--card-border)',
           }}>
             {/* Accent bar */}
             <div style={{ width: 3, background: 'var(--accent)', flexShrink: 0 }} />
@@ -156,14 +156,14 @@ export default function MessageInput({ recipient, onSend, onSendMedia, replyTo, 
 
         {/* Timer picker */}
         {showTimer && (
-          <div className="mb-3 flex items-center gap-2 flex-wrap p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="mb-3 flex items-center gap-2 flex-wrap p-2 rounded-lg" style={{ background: 'var(--bg-muted)', border: '1px solid var(--card-border)' }}>
             <span style={{ color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600 }}>Disappear after:</span>
             {EXPIRY_OPTIONS.map((opt) => (
               <button
                 key={opt.label}
                 onClick={() => { setExpiresIn(opt.value); setShowTimer(false); }}
                 className="px-3 py-1 rounded-full text-xs font-semibold transition duration-150"
-                style={expiresIn === opt.value ? { background: 'var(--accent)', color: 'var(--text-on-accent)', boxShadow: '0 6px 12px rgba(0,0,0,0.08)' } : { background: 'rgba(255,255,255,0.04)', color: 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.06)' }}
+                style={expiresIn === opt.value ? { background: 'var(--accent)', color: '#fff' } : { background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}
               >
                 {opt.label}
               </button>
@@ -208,17 +208,24 @@ export default function MessageInput({ recipient, onSend, onSendMedia, replyTo, 
             onChange={(e) => { setText(e.target.value); emitTyping(); }}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSubmit(e)}
             placeholder="Type a message..."
-            className="flex-1 bg-white/10 rounded-full px-4 py-2.5 text-sm outline-none border border-white/10 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition duration-150"
-            style={{ color: 'var(--text-primary)' }}
+            className="flex-1 rounded-full px-4 py-2.5 text-sm outline-none transition duration-150"
+            style={{
+              background: 'var(--bg-muted)',
+              border: '1.5px solid var(--card-border)',
+              color: 'var(--text-primary)',
+            }}
+            onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; e.target.style.boxShadow = '0 0 0 3px rgba(10,163,163,0.10)'; }}
+            onBlur={(e) => { e.target.style.borderColor = 'var(--card-border)'; e.target.style.boxShadow = 'none'; }}
           />
 
           <button
             type="submit"
             disabled={!text.trim() || sending}
-            className="flex-shrink-0 p-2.5 bg-primary-500 hover:bg-primary-400 rounded-full text-ink-950 disabled:opacity-40 disabled:cursor-not-allowed transition duration-150 shadow-md"
+            className="flex-shrink-0 p-2.5 rounded-full disabled:opacity-40 disabled:cursor-not-allowed transition duration-150 shadow-md"
+            style={{ background: 'var(--accent)', color: '#fff' }}
           >
             {sending ? (
-              <div className="w-5 h-5 border-2 border-ink-950 border-t-transparent rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
             ) : (
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
