@@ -136,19 +136,20 @@ export default function QRScanner({ onClose, onAdded }) {
               </div>
             )}
 
-            {friendStatus === 'none' && (
+            {/* Show add button for 'none', 'rejected', null, or any unexpected value */}
+            {friendStatus !== 'accepted' && friendStatus !== 'pending' && (
               <button
                 onClick={sendRequest}
                 disabled={loading}
-                className="w-full bg-[#00a884] hover:bg-[#02b397] font-semibold rounded-xl py-3 transition disabled:opacity-50 text-sm"
-                style={{ color: 'var(--text-on-accent, #fff)' }}
+                className="w-full font-semibold rounded-xl py-3 transition disabled:opacity-50 text-sm"
+                style={{ background: 'var(--accent)', color: '#fff' }}
               >
                 {loading
                   ? <span className="flex items-center justify-center gap-2">
                       <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       Sending…
                     </span>
-                  : 'Send friend request'}
+                  : `Add @${profile.username}`}
               </button>
             )}
 
