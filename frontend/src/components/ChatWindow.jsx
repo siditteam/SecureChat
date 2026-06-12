@@ -6,15 +6,22 @@ import { useCall } from '../context/CallContext';
 import { decryptMessage } from '../utils/crypto';
 import Message from './Message';
 import MessageInput from './MessageInput';
+import VouchedBadge from './VouchedBadge';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 function formatLastSeen(date) {
   if (!date) return '';
-  const diff = Date.now() - new Date(date);
+  const d = new Date(date);
+  const diff = Date.now() - d;
   if (diff < 60_000) return 'just now';
   if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
-  return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const today = new Date();
+  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return time;
+  if (d.toDateString() === yesterday.toDateString()) return `Yesterday ${time}`;
+  return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${time}`;
 }
 
 function Avatar({ name, online, size = 'md' }) {
@@ -43,9 +50,11 @@ function Avatar({ name, online, size = 'md' }) {
 
 export default function ChatWindow({ selectedUser, onBack }) {
   const { user } = useAuth();
-  const { socket } = useSocket();
+  const { socket, connected, sendMessage, pendingCount } = useSocket();
   const { initiateCall, callState } = useCall();
   const canCall = callState === 'idle';
+  // VIDEO_CALLS is disabled in MVP — set VITE_ENABLE_VIDEO=true to re-enable
+  const videoEnabled = import.meta.env.VITE_ENABLE_VIDEO === 'true';
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [peerOnline, setPeerOnline] = useState(false);
@@ -162,7 +171,7 @@ export default function ChatWindow({ selectedUser, onBack }) {
 
   const handleSend = useCallback((encryptedData, expiresIn) => {
     return new Promise((resolve) => {
-      socket.emit('send_message', { receiverId: selectedUser._id, ...encryptedData, expiresIn },
+      sendMessage({ receiverId: selectedUser._id, ...encryptedData, expiresIn },
         async (res) => {
           if (res?.success) {
             const [decrypted] = await decrypt([res.message]);
@@ -172,11 +181,11 @@ export default function ChatWindow({ selectedUser, onBack }) {
         }
       );
     });
-  }, [socket, selectedUser, decrypt]);
+  }, [sendMessage, selectedUser, decrypt]);
 
   const handleSendMedia = useCallback((filename, mediaType, viewOnce, expiresIn) => {
     return new Promise((resolve) => {
-      socket.emit('send_message',
+      sendMessage(
         { receiverId: selectedUser._id, mediaUrl: filename, mediaType, viewOnce, expiresIn },
         (res) => {
           if (res?.success) {
@@ -186,7 +195,7 @@ export default function ChatWindow({ selectedUser, onBack }) {
         }
       );
     });
-  }, [socket, selectedUser]);
+  }, [sendMessage, selectedUser]);
 
   if (!selectedUser) {
     return (
@@ -222,8 +231,13 @@ export default function ChatWindow({ selectedUser, onBack }) {
         </button>
         <Avatar name={selectedUser.username} online={peerOnline} size="sm" />
         <div className="flex-1 min-w-0">
-          <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>{selectedUser.username}</p>
-          <p style={{ fontSize: 12, opacity: 0.85, color: 'var(--text-secondary)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)', margin: 0 }}>{selectedUser.username}</p>
+            {selectedUser.vouchedBy && (
+              <VouchedBadge vouchedBy={selectedUser.vouchedBy} size="xs" />
+            )}
+          </div>
+          <p style={{ fontSize: 12, opacity: 0.85, color: 'var(--text-secondary)', marginTop: 1 }}>
             {typing ? '✍️ typing…' : peerOnline ? '🟢 Online' : peerLastSeen ? `Last seen ${formatLastSeen(peerLastSeen)}` : 'Offline'}
           </p>
         </div>
@@ -239,22 +253,38 @@ export default function ChatWindow({ selectedUser, onBack }) {
                 d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
             </svg>
           </button>
-          <button
-            onClick={() => initiateCall(selectedUser, 'video')}
-            disabled={!canCall}
-            title="Video call"
-            className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/20 transition disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+          {/* VIDEO_CALLS: hidden in MVP (VITE_ENABLE_VIDEO=true to show) */}
+          {videoEnabled && (
+            <button
+              onClick={() => initiateCall(selectedUser, 'video')}
+              disabled={!canCall}
+              title="Video call"
+              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/20 transition disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+            >
+              <svg className="w-5 h-5" style={{ color: 'var(--text-primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M4 6h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2z" />
+              </svg>
+            </button>
+          )}
+          {!connected && (
+            <div
+              title={pendingCount > 0 ? `${pendingCount} message${pendingCount === 1 ? '' : 's'} queued — will send when reconnected` : 'Connecting…'}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, marginLeft: 4, padding: '5px 9px', borderRadius: 999, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', cursor: 'default' }}
+            >
+              <span style={{ color: '#92400e', fontWeight: 600 }}>
+                {pendingCount > 0 ? `⏳ ${pendingCount} queued` : '⏳ Offline'}
+              </span>
+            </div>
+          )}
+          <div
+            title="Messages are end-to-end encrypted. Only you and the recipient can read them."
+            style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, marginLeft: 4, padding: '5px 9px', borderRadius: 999, background: 'rgba(22,163,74,0.07)', border: '1px solid rgba(22,163,74,0.15)', cursor: 'default' }}
           >
-            <svg className="w-5 h-5" style={{ color: 'var(--text-primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M4 6h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2z" />
-            </svg>
-          </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, opacity: 0.85, marginLeft: 8, padding: '6px 10px', borderRadius: 999, background: 'rgba(10,163,163,0.06)' }}>
-            <svg style={{ width: 14, height: 14, color: 'var(--accent)' }} fill="currentColor" viewBox="0 0 24 24">
+            <svg style={{ width: 13, height: 13, color: '#16a34a', flexShrink: 0 }} fill="currentColor" viewBox="0 0 24 24">
               <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" />
             </svg>
-            <span style={{ color: 'var(--text-secondary)' }}>E2E</span>
+            <span style={{ color: '#16a34a', fontWeight: 600 }}>Encrypted</span>
           </div>
         </div>
       </div>
