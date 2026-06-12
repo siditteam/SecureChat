@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 
 const F = "'Space Grotesk', sans-serif";
 const ACCENT = 'var(--accent)';
@@ -51,7 +51,7 @@ function SafariMockup() {
 
         {/* HIGHLIGHTED: Share button */}
         <div style={{ position: 'relative' }}>
-          <HighlightPill label="TAP HERE — STEP 1" />
+          <HighlightPill label="TAP HERE â€” STEP 1" />
           <div style={{ background: 'rgba(10,163,163,0.12)', border: '2.5px solid #0AA3A3', borderRadius: 9, padding: '6px 7px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg viewBox="0 0 24 24" style={{ width: 18, height: 18, color: ACCENT }} fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 3v13M8 7l4-4 4 4"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/>
@@ -74,7 +74,7 @@ function SafariMockup() {
         {/* HIGHLIGHTED item */}
         <div style={{ padding: '7px 12px', fontSize: 12, fontWeight: 700, color: ACCENT, background: 'rgba(10,163,163,0.07)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6, border: '1px solid rgba(10,163,163,0.18)', margin: '3px 6px' }}>
           <svg viewBox="0 0 24 24" style={{ width: 13, height: 13 }} fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          Add to Home Screen ← STEP 2
+          Add to Home Screen â† STEP 2
         </div>
         {['Mail', 'Messages'].map(item => (
           <div key={item} style={{ padding: '5px 12px', fontSize: 11, color: '#94a3b8' }}>{item}</div>
@@ -94,7 +94,7 @@ function ChromeMockup() {
         <svg viewBox="0 0 24 24" style={{ width: 13, height: 13, color: '#94a3b8' }} fill="none" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
         {/* HIGHLIGHTED: 3-dot */}
         <div style={{ position: 'relative', marginLeft: 4 }}>
-          <HighlightPill label="TAP HERE — STEP 1" />
+          <HighlightPill label="TAP HERE â€” STEP 1" />
           <div style={{ background: 'rgba(10,163,163,0.12)', border: '2.5px solid #0AA3A3', borderRadius: 7, padding: '5px 5px', display: 'flex', gap: 3, alignItems: 'center' }}>
             {[0,1,2].map(i => <div key={i} style={{ width: 4, height: 4, borderRadius: '50%', background: ACCENT }} />)}
           </div>
@@ -114,7 +114,7 @@ function ChromeMockup() {
         {/* HIGHLIGHTED: Add to Home Screen */}
         <div style={{ padding: '8px 14px', fontSize: 12, fontWeight: 700, color: ACCENT, background: 'rgba(10,163,163,0.07)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6, border: '1px solid rgba(10,163,163,0.18)', margin: '3px 5px' }}>
           <svg viewBox="0 0 24 24" style={{ width: 13, height: 13 }} fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          Add to Home Screen ← STEP 2
+          Add to Home Screen â† STEP 2
         </div>
         {['Settings', 'Help & feedback'].map(item => (
           <div key={item} style={{ padding: '6px 14px', fontSize: 11, color: '#94a3b8' }}>{item}</div>
@@ -140,7 +140,7 @@ export default function InstallApp() {
               Open in browser
             </Link>
             <Link to="/login" style={{ fontFamily: F, fontWeight: 700, fontSize: 13, background: ACCENT, color: '#fff', padding: '10px 20px', borderRadius: 99, textDecoration: 'none' }}>
-              Open Unddr →
+              Open UNDDR â†’
             </Link>
           </div>
         </div>
@@ -157,10 +157,10 @@ export default function InstallApp() {
             <span style={{ color: ACCENT }}>Takes 30 seconds.</span>
           </h1>
           <p style={{ fontSize: 17, color: T.secondary, lineHeight: 1.7, maxWidth: 480, margin: '0 auto 24px' }}>
-            No App Store. No Play Store. UNDDR is a PWA — open it in your browser and follow the steps for your phone.
+            No App Store. No Play Store. UNDDR is a PWA â€” open it in your browser and follow the steps for your phone.
           </p>
           <Link to="/login" style={{ fontFamily: F, fontWeight: 600, fontSize: 14, color: T.secondary, textDecoration: 'none', borderBottom: `1px solid ${BORDER.soft}` }}>
-            Skip this — just open in browser →
+            Skip this â€” just open in browser â†’
           </Link>
         </div>
 
@@ -172,10 +172,10 @@ export default function InstallApp() {
             <div style={{ padding: '28px 28px 0', marginBottom: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                 <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, color: T.secondary }} fill="none" stroke="currentColor" strokeWidth={1.5}><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-                <h2 style={{ fontFamily: F, fontWeight: 700, fontSize: 18, color: T.primary }}>iPhone · Safari</h2>
+                <h2 style={{ fontFamily: F, fontWeight: 700, fontSize: 18, color: T.primary }}>iPhone Â· Safari</h2>
               </div>
               <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.6 }}>
-                Must use <strong style={{ color: T.secondary }}>Safari</strong> — the share button doesn't appear in Chrome on iOS.
+                Must use <strong style={{ color: T.secondary }}>Safari</strong> â€” the share button doesn't appear in Chrome on iOS.
               </p>
             </div>
 
@@ -184,7 +184,7 @@ export default function InstallApp() {
             </div>
 
             <div style={{ padding: '0 28px 28px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <Step n="1" title='Tap the Share button (↑)' desc="The box-with-arrow icon at the bottom of Safari — highlighted in teal in the mockup above." />
+              <Step n="1" title='Tap the Share button (â†‘)' desc="The box-with-arrow icon at the bottom of Safari â€” highlighted in teal in the mockup above." />
               <Step n="2" title='Tap "Add to Home Screen"' desc="Scroll down the share sheet that pops up from the bottom. Tap it." />
               <Step n="3" title="Tap Add in the top-right" desc="A name and icon preview appears. Tap Add. The UNDDR icon appears on your home screen." />
             </div>
@@ -195,10 +195,10 @@ export default function InstallApp() {
             <div style={{ padding: '28px 28px 0', marginBottom: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                 <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, color: T.secondary }} fill="none" stroke="currentColor" strokeWidth={1.5}><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-                <h2 style={{ fontFamily: F, fontWeight: 700, fontSize: 18, color: T.primary }}>Android · Chrome</h2>
+                <h2 style={{ fontFamily: F, fontWeight: 700, fontSize: 18, color: T.primary }}>Android Â· Chrome</h2>
               </div>
               <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.6 }}>
-                Use <strong style={{ color: T.secondary }}>Chrome</strong>. Chrome may also show an automatic install banner at the bottom — tap it to skip the menu.
+                Use <strong style={{ color: T.secondary }}>Chrome</strong>. Chrome may also show an automatic install banner at the bottom â€” tap it to skip the menu.
               </p>
             </div>
 
@@ -207,8 +207,8 @@ export default function InstallApp() {
             </div>
 
             <div style={{ padding: '0 28px 28px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <Step n="1" title="Tap the ⋮ menu (three dots)" desc="Top-right corner of Chrome — highlighted in teal in the mockup above." />
-              <Step n="2" title='Tap "Add to Home Screen"' desc='It may also say "Install app" — Chrome auto-detects PWAs. Both do the same thing.' />
+              <Step n="1" title="Tap the â‹® menu (three dots)" desc="Top-right corner of Chrome â€” highlighted in teal in the mockup above." />
+              <Step n="2" title='Tap "Add to Home Screen"' desc='It may also say "Install app" â€” Chrome auto-detects PWAs. Both do the same thing.' />
               <Step n="3" title="Tap Install or Add" desc="The UNDDR icon appears on your home screen. Open it just like any app." />
             </div>
           </div>
@@ -220,15 +220,15 @@ export default function InstallApp() {
           <div>
             <p style={{ fontFamily: F, fontWeight: 600, fontSize: 14, color: T.primary, marginBottom: 4 }}>On desktop?</p>
             <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.65 }}>
-              Chrome on desktop also supports installing as an app — look for the install icon (⊕) in the address bar.
-              Or just bookmark unddrground.com and open it in any browser — it works perfectly without installing.
+              Chrome on desktop also supports installing as an app â€” look for the install icon (âŠ•) in the address bar.
+              Or just bookmark unddrground.com and open it in any browser â€” it works perfectly without installing.
             </p>
           </div>
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 48 }}>
           <Link to="/login" style={{ fontFamily: F, fontWeight: 700, fontSize: 15, background: ACCENT, color: '#fff', padding: '14px 40px', borderRadius: 99, textDecoration: 'none' }}>
-            Open Unddr now →
+            Open UNDDR now â†’
           </Link>
         </div>
       </div>

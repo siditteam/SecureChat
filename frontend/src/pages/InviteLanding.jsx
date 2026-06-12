@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -14,6 +14,9 @@ export default function InviteLanding() {
   const [loading, setLoading] = useState(true);
   const [addLoading, setAddLoading] = useState(false);
   const [addDone, setAddDone] = useState(false);
+  const [vouchLoading, setVouchLoading] = useState(false);
+  const [vouchDone, setVouchDone] = useState(false);
+  const [vouchError, setVouchError] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -22,6 +25,21 @@ export default function InviteLanding() {
       .catch(() => setError('Invite not found or expired.'))
       .finally(() => setLoading(false));
   }, [code]);
+
+  const vouch = async () => {
+    if (!user) return navigate(`/login?redirect=/invite/${encodeURIComponent(code)}`);
+    setVouchLoading(true);
+    setVouchError('');
+    try {
+      const res = await axios.post(`${API}/invites/${code}/vouch`);
+      setInvite((prev) => ({ ...prev, vouchedBy: res.data.vouchedBy }));
+      setVouchDone(true);
+    } catch (e) {
+      setVouchError(e.response?.data?.message || 'Failed to vouch.');
+    } finally {
+      setVouchLoading(false);
+    }
+  };
 
   const addFriend = async () => {
     if (!invite?.inviter) return;
@@ -51,8 +69,8 @@ export default function InviteLanding() {
   if (error && !invite) {
     return (
       <div className="min-h-screen bg-ink-900 flex flex-col items-center justify-center gap-4 px-4">
-        <p className="text-white/50 text-lg">Invalid invite</p>
-        <p className="text-white/30 text-sm">{error}</p>
+        <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>Invalid invite</p>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{error}</p>
         <Link to="/" className="text-primary-400 hover:underline text-sm">Go to Unddr</Link>
       </div>
     );
@@ -66,7 +84,7 @@ export default function InviteLanding() {
 
         <div className="text-center mb-8">
           <img src="/assets/pngs/logo-unddr-icon-128.png" alt="Unddr" className="w-16 h-16 rounded-2xl shadow-xl shadow-black/50 mx-auto mb-3" />
-          <p className="text-white/40 text-sm font-medium">You've been invited to Unddr</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14, fontWeight: 500 }}>You've been invited to Unddr</p>
         </div>
 
         <div className="bg-ink-800 border border-white/10 rounded-2xl p-7 shadow-2xl flex flex-col items-center gap-5 text-center">
@@ -78,8 +96,8 @@ export default function InviteLanding() {
                 {invite.inviter.username[0].toUpperCase()}
               </div>
               <div>
-                <p className="text-white font-bold text-lg">@{invite.inviter.username}</p>
-                <p className="text-white/40 text-sm">is inviting you underground</p>
+                <p style={{ color: 'var(--text-primary)', fontSize: 18, fontWeight: 700 }}>@{invite.inviter.username}</p>
+                <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>is inviting you underground</p>
               </div>
             </div>
           )}
@@ -94,8 +112,8 @@ export default function InviteLanding() {
 
           {!isExpiredOrUsed && !user && (
             <div className="flex flex-col gap-3 w-full">
-              <p className="text-white/40 text-sm">
-                Create an account to join <span className="text-white font-semibold">@{invite?.inviter?.username}</span> on Unddr.
+              <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
+                Create an account to join <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>@{invite?.inviter?.username}</span> on Unddr.
               </p>
               <Link
                 to={registerLink}
@@ -105,18 +123,19 @@ export default function InviteLanding() {
               </Link>
               <Link
                 to={loginLink}
-                className="w-full bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl py-3 transition text-sm"
+                className="w-full bg-white/10 hover:bg-white/15 font-semibold rounded-xl py-3 transition text-sm"
+                style={{ color: 'var(--text-primary)' }}
               >
                 I already have an account
               </Link>
-              <p className="text-white/20 text-xs">Invite-only · End-to-end encrypted · Free</p>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 12 }}>Invite-only Â· End-to-end encrypted Â· Free</p>
             </div>
           )}
 
           {!isExpiredOrUsed && user && user.username === invite?.inviter?.username && (
             <div className="w-full">
-              <p className="text-white/40 text-sm mb-3">This is your own invite link. Share it with someone you'd like to bring in.</p>
-              <button onClick={() => navigate('/')} className="w-full bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl py-3 transition text-sm">
+              <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 12 }}>This is your own invite link. Share it with someone you'd like to bring in.</p>
+              <button onClick={() => navigate('/')} className="w-full bg-white/10 hover:bg-white/15 font-semibold rounded-xl py-3 transition text-sm" style={{ color: 'var(--text-primary)' }}>
                 Back to chat
               </button>
             </div>
@@ -124,16 +143,32 @@ export default function InviteLanding() {
 
           {!isExpiredOrUsed && user && user.username !== invite?.inviter?.username && !addDone && (
             <div className="w-full space-y-3">
-              <p className="text-white/40 text-sm">You're already on Unddr. Want to add <span className="text-white font-semibold">@{invite?.inviter?.username}</span> as a friend?</p>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>You're already on Unddr. Want to add <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>@{invite?.inviter?.username}</span> as a friend?</p>
               {error && <p className="text-error text-xs">{error}</p>}
               <button
                 onClick={addFriend}
                 disabled={addLoading}
                 className="w-full bg-primary-500 hover:bg-primary-400 text-ink-950 font-semibold rounded-xl py-3 transition text-sm disabled:opacity-50"
               >
-                {addLoading ? 'Sending…' : `Add @${invite?.inviter?.username}`}
+                {addLoading ? 'Sendingâ€¦' : `Add @${invite?.inviter?.username}`}
               </button>
-              <button onClick={() => navigate('/')} className="w-full bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl py-3 transition text-sm">
+              {/* Vouch action */}
+              {invite && !invite.vouchedBy && (
+                <button
+                  onClick={vouch}
+                  disabled={vouchLoading}
+                  className="w-full bg-amber-500 hover:bg-amber-400 text-ink-950 font-semibold rounded-xl py-3 transition text-sm disabled:opacity-50"
+                >
+                  {vouchLoading ? 'Vouchingâ€¦' : 'Vouch for this person'}
+                </button>
+              )}
+              {invite && invite.vouchedBy && (
+                <div className="w-full bg-amber-50 border border-amber-100 rounded-xl py-3 px-4">
+                  <p style={{ color: 'var(--accent)', fontSize: 14 }}>Vouched by @{invite.vouchedBy.username}</p>
+                </div>
+              )}
+              {vouchError && <p className="text-error text-xs">{vouchError}</p>}
+              <button onClick={() => navigate('/')} className="w-full bg-white/10 hover:bg-white/15 font-semibold rounded-xl py-3 transition text-sm" style={{ color: 'var(--text-primary)' }}>
                 Skip
               </button>
             </div>
@@ -145,7 +180,7 @@ export default function InviteLanding() {
                 <p className="text-success font-semibold text-sm">Friend request sent!</p>
               </div>
               <button onClick={() => navigate('/')} className="w-full bg-primary-500 hover:bg-primary-400 text-ink-950 font-semibold rounded-xl py-3 transition text-sm">
-                Open Unddr
+                Open UNDDR
               </button>
             </div>
           )}
@@ -153,7 +188,7 @@ export default function InviteLanding() {
         </div>
 
         <p className="text-center mt-5">
-          <Link to="/manual" className="text-white/25 text-xs hover:text-white/50 transition underline underline-offset-2">
+          <Link to="/manual" className="text-xs transition underline underline-offset-2" style={{ color: 'var(--text-secondary)' }}>
             Read the Unddr manual
           </Link>
         </p>

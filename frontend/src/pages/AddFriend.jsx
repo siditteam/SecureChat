@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -46,14 +46,15 @@ function InstallBanner() {
 
   return (
     <div className="w-full bg-ink-800 border border-primary-500/30 rounded-2xl p-4">
-      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
           <img src="/assets/pngs/logo-unddr-icon-128.png" alt="" className="w-8 h-8 rounded-lg flex-shrink-0" />
-          <p className="text-white font-semibold text-sm">Add Unddr to home screen</p>
+          <p style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: 14 }}>Add Unddr to home screen</p>
         </div>
         <button
           onClick={() => setDismissed(true)}
-          className="text-white/30 hover:text-white/60 flex-shrink-0 mt-0.5 transition"
+          className="flex-shrink-0 mt-0.5 transition"
+          style={{ color: 'var(--text-secondary)' }}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -63,19 +64,19 @@ function InstallBanner() {
 
       {isIOS ? (
         <div className="space-y-2.5">
-          <div className="flex items-center gap-2.5 text-white/60 text-xs">
+          <div className="flex items-center gap-2.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
             <span className="w-5 h-5 rounded-full bg-primary-500/20 text-primary-400 flex items-center justify-center font-bold flex-shrink-0 text-[10px]">1</span>
-            <span>Tap the <span className="text-white font-semibold">Share</span> button <span className="text-primary-400 font-bold text-sm">⬆</span> at the bottom of Safari</span>
+            <span>Tap the <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Share</span> button <span className="text-primary-400 font-bold text-sm">â¬†</span> at the bottom of Safari</span>
           </div>
-          <div className="flex items-center gap-2.5 text-white/60 text-xs">
+          <div className="flex items-center gap-2.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
             <span className="w-5 h-5 rounded-full bg-primary-500/20 text-primary-400 flex items-center justify-center font-bold flex-shrink-0 text-[10px]">2</span>
-            <span>Scroll and tap <span className="text-white font-semibold">"Add to Home Screen"</span></span>
+            <span>Scroll and tap <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>&quot;Add to Home Screen&quot;</span></span>
           </div>
-          <div className="flex items-center gap-2.5 text-white/60 text-xs">
+          <div className="flex items-center gap-2.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
             <span className="w-5 h-5 rounded-full bg-primary-500/20 text-primary-400 flex items-center justify-center font-bold flex-shrink-0 text-[10px]">3</span>
-            <span>Tap <span className="text-white font-semibold">"Add"</span> — done!</span>
+            <span>Tap <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>&quot;Add&quot;</span> â€” done!</span>
           </div>
-          <p className="text-white/25 text-[10px] pt-1">Requires Safari. The app opens full-screen with no browser bar.</p>
+          <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10, paddingTop: 4 }}>Requires Safari. The app opens full-screen with no browser bar.</p>
         </div>
       ) : (
         <button
@@ -165,7 +166,7 @@ export default function AddFriend() {
   if (error && !profile) {
     return (
       <div className="min-h-screen bg-ink-900 flex flex-col items-center justify-center gap-4 px-4">
-        <p className="text-white/50 text-lg">User not found</p>
+        <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>User not found</p>
         <Link to="/" className="text-primary-400 hover:underline text-sm">Go to Unddr</Link>
       </div>
     );
@@ -177,15 +178,15 @@ export default function AddFriend() {
         {/* Logo */}
         <div className="text-center mb-8">
           <img src="/assets/pngs/logo-unddr-icon-128.png" alt="Unddr" className="w-16 h-16 rounded-2xl shadow-xl shadow-black/50 mx-auto mb-1" />
-          <p className="text-white/40 text-sm font-medium">Unddr invite</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14, fontWeight: 500 }}>Unddr invite</p>
         </div>
 
         <div className="bg-ink-800 border border-white/10 rounded-2xl p-7 shadow-2xl flex flex-col items-center gap-5 text-center">
           {/* Loading overlay while auto-sending */}
-          {actionLoading && (
+              {actionLoading && (
             <div className="flex flex-col items-center gap-3 py-4">
               <div className="w-8 h-8 border-2 border-primary-800 border-t-primary-500 rounded-full animate-spin" />
-              <p className="text-white/50 text-sm">Sending friend request…</p>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Sending friend requestâ€¦</p>
             </div>
           )}
 
@@ -197,8 +198,8 @@ export default function AddFriend() {
               </div>
 
               <div>
-                <h2 className="text-white text-xl font-bold">@{profile.username}</h2>
-                <p className="text-white/40 text-sm mt-1">
+                <h2 style={{ color: 'var(--text-primary)', fontSize: 18, fontWeight: 700 }}>@{profile.username}</h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginTop: 6 }}>
                   {status === 'self' ? 'Your own invite link' : 'invited you to Unddr'}
                 </p>
               </div>
@@ -210,7 +211,7 @@ export default function AddFriend() {
               {/* Not logged in */}
               {!user && (
                 <div className="flex flex-col gap-3 w-full">
-                  <p className="text-white/40 text-sm">Create an account to connect with <span className="text-white font-semibold">@{profile.username}</span></p>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Create an account to connect with <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>@{profile.username}</span></p>
                   <Link
                     to={registerLink}
                     className="w-full bg-primary-500 hover:bg-primary-400 text-ink-950 font-semibold rounded-xl py-3 transition text-sm"
@@ -219,28 +220,30 @@ export default function AddFriend() {
                   </Link>
                   <Link
                     to={loginLink}
-                    className="w-full bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl py-3 transition text-sm"
+                    className="w-full rounded-xl py-3 transition text-sm"
+                    style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--text-primary)', fontWeight: 600 }}
                   >
                     Sign in
                   </Link>
-                  <p className="text-white/20 text-xs">🔒 End-to-end encrypted · Free</p>
+                  <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 12 }}>ðŸ”’ End-to-end encrypted Â· Free</p>
                 </div>
               )}
 
               {/* Self */}
               {user && status === 'self' && (
                 <div className="w-full">
-                  <p className="text-white/40 text-sm mb-3">Share this link with people you want to add</p>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 12 }}>Share this link with people you want to add</p>
                   <button
                     onClick={() => navigate('/')}
-                    className="w-full bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl py-3 transition text-sm"
+                    className="w-full rounded-xl py-3 transition text-sm"
+                    style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--text-primary)', fontWeight: 600 }}
                   >
                     Go to chat
                   </button>
                 </div>
               )}
 
-              {/* Not friends — manual send (only if not auto-add) */}
+              {/* Not friends â€” manual send (only if not auto-add) */}
               {user && status === 'none' && !autoAdd && (
                 <button
                   onClick={sendRequest}
@@ -258,9 +261,10 @@ export default function AddFriend() {
                   </div>
                   <button
                     onClick={() => navigate('/')}
-                    className="w-full bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl py-3 transition text-sm"
+                    className="w-full bg-white/10 hover:bg-white/15 font-semibold rounded-xl py-3 transition text-sm"
+                    style={{ color: 'var(--text-primary)' }}
                   >
-                    Open Unddr
+                    Open UNDDR
                   </button>
                 </div>
               )}
@@ -279,7 +283,7 @@ export default function AddFriend() {
                     onClick={() => navigate('/')}
                     className="w-full bg-primary-500 hover:bg-primary-400 text-ink-950 font-semibold rounded-xl py-3 transition text-sm"
                   >
-                    Open Unddr
+                    Open UNDDR
                   </button>
                 </div>
               )}
@@ -288,7 +292,7 @@ export default function AddFriend() {
               {user && status === 'accepted' && !done && (
                 <div className="w-full space-y-3">
                   <div className="bg-success/10 border border-success/20 rounded-xl py-2.5 px-4">
-                    <p className="text-success text-sm font-medium">Already friends ✓</p>
+                    <p className="text-success text-sm font-medium">Already friends âœ“</p>
                   </div>
                   <button
                     onClick={() => navigate('/')}

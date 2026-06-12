@@ -83,7 +83,7 @@ export default function Apply() {
             onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-strong)'}
             onMouseLeave={e => e.currentTarget.style.background = ACCENT}
           >
-            Open Unddr →
+            Open UNDDR →
           </Link>
         </div>
       </nav>

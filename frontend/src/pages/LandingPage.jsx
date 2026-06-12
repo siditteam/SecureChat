@@ -100,8 +100,11 @@ function Nav() {
       borderBottom:  scrolled ? `1px solid rgba(15,23,36,0.08)`  : '1px solid transparent',
     }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <img src="/assets/logo-unddr-teal-icon.svg" alt="Unddr" style={{ width: 32, height: 32, borderRadius: 8 }} />
+        {/* Mark: teal pill with letter U, then UNDDR wordmark */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 9, background: ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <span style={{ fontFamily: F, fontWeight: 800, fontSize: 15, color: '#07050B', letterSpacing: '-0.03em' }}>U</span>
+          </div>
           <span style={{ fontFamily: F, fontWeight: 700, fontSize: 18, color: ACCENT, letterSpacing: '-0.02em' }}>UNDDR</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -118,7 +121,7 @@ function Nav() {
             onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-strong)'}
             onMouseLeave={e => e.currentTarget.style.background = ACCENT}
           >
-            Open Unddr →
+            Open UNDDR →
           </Link>
         </div>
       </div>
@@ -150,9 +153,9 @@ function Hero() {
         transform:  ready ? 'none' : 'translateY(22px)',
         transition: 'opacity 1.1s ease, transform 1.1s ease',
       }}>
-        {/* Icon */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 36 }}>
-          <img src="/assets/logo-unddr-teal.svg" alt="Unddr" style={{ width: 420, maxWidth: '90%', height: 'auto' }} />
+        {/* Hero wordmark — inline so it can never be cut off by viewport */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
+          <span style={{ fontFamily: F, fontWeight: 800, fontSize: 'clamp(72px, 18vw, 140px)', color: ACCENT, letterSpacing: '-0.055em', lineHeight: 0.92, display: 'block' }}>UNDDR</span>
         </div>
 
         {/* Tagline eyebrow */}
@@ -187,7 +190,7 @@ function Hero() {
             onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-strong)'}
             onMouseLeave={e => e.currentTarget.style.background = ACCENT}
           >
-            Open Unddr →
+            Open UNDDR →
           </Link>
           <Link to="/manual" style={{
             fontFamily: F, fontWeight: 600, fontSize: 15,
@@ -1092,13 +1095,15 @@ function Footer() {
     <footer style={{ background: BG.mid, borderTop: `1px solid rgba(15,23,36,0.08)`, padding: '36px 24px' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="/assets/logo-unddr-teal-icon.svg" alt="Unddr" style={{ width: 24, height: 24, borderRadius: 6, opacity: 0.7 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 24, height: 24, borderRadius: 7, background: ACCENT, opacity: 0.55, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <span style={{ fontFamily: F, fontWeight: 800, fontSize: 11, color: '#07050B', letterSpacing: '-0.02em' }}>U</span>
+          </div>
           <span style={{ fontFamily: F, fontWeight: 700, fontSize: 14, color: T.muted, letterSpacing: '-0.01em' }}>UNDDR</span>
         </div>
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 28, alignItems: 'center' }}>
-          {[{ label: 'Open Unddr', to: '/login' }, { label: 'The Manual', to: '/manual' }, { label: 'Apply', to: '/apply' }].map(({ label, to }) => (
+          {[{ label: 'Open UNDDR', to: '/login' }, { label: 'The Manual', to: '/manual' }, { label: 'Apply', to: '/apply' }].map(({ label, to }) => (
             <Link key={label} to={to} style={{ fontFamily: F, fontSize: 13, color: T.muted, textDecoration: 'none', transition: 'color 0.15s' }}
               onMouseEnter={e => e.currentTarget.style.color = T.secondary}
               onMouseLeave={e => e.currentTarget.style.color = T.muted}
