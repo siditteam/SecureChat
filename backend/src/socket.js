@@ -44,6 +44,7 @@ module.exports = (io) => {
           encryptedContent, encryptedKeyForReceiver, encryptedKeyForSender, iv,
           mediaUrl, mediaType, viewOnce,
           expiresIn,
+          replyTo,
         } = data;
 
         if (!receiverId) return callback?.({ success: false, error: 'Missing receiverId' });
@@ -59,6 +60,8 @@ module.exports = (io) => {
           ...(hasText && { encryptedContent, encryptedKeyForReceiver, encryptedKeyForSender, iv }),
           ...(hasMedia && { mediaUrl, mediaType, viewOnce: !!viewOnce }),
           expiresAt,
+          // Reply-to metadata (pass through as-is — stored as plain subdocument)
+          ...(replyTo?.messageId && { replyTo }),
         });
 
         await message.populate('sender', 'username');

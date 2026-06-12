@@ -5,9 +5,11 @@ import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { useCall } from '../context/CallContext';
 import { useUnderground } from '../context/UndergroundContext';
+import { useToast } from '../context/ToastContext';
 import { decryptMessage } from '../utils/crypto';
 import Message from './Message';
 import MessageInput from './MessageInput';
+import MessageActionSheet from './MessageActionSheet';
 import VouchedBadge from './VouchedBadge';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -50,22 +52,202 @@ function Avatar({ name, online, size = 'md' }) {
   );
 }
 
+// ── Pinned message banner ─────────────────────────────────────────────────────
+
+function PinnedBanner({ pinnedMessage, onScrollTo, onUnpin }) {
+  if (!pinnedMessage) return null;
+
+  const preview = pinnedMessage.mediaUrl
+    ? (pinnedMessage.mediaType === 'video' ? 'Video' : 'Photo')
+    : (pinnedMessage.content?.slice(0, 60) || '');
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '8px 14px',
+        background: 'var(--bg-muted)',
+        borderBottom: '1px solid var(--card-border)',
+        cursor: 'pointer',
+      }}
+      onClick={onScrollTo}
+    >
+      {/* Pin icon */}
+      <svg width="14" height="14" fill="none" stroke="var(--accent)" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+      </svg>
+      <p style={{ flex: 1, fontSize: 12, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>
+        <span style={{ fontWeight: 600, color: 'var(--text-primary)', marginRight: 4 }}>Pinned:</span>
+        {preview}
+      </p>
+      <button
+        onClick={(e) => { e.stopPropagation(); onUnpin(); }}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, padding: '2px 6px', borderRadius: 6, flexShrink: 0 }}
+      >
+        Unpin
+      </button>
+    </div>
+  );
+}
+
+// ── Forward friend picker modal ───────────────────────────────────────────────
+
+function ForwardModal({ message, currentUser, socket, onClose }) {
+  const [friends, setFriends] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [sent, setSent] = useState(null);
+
+  useEffect(() => {
+    axios.get(`${API}/friends`)
+      .then((r) => setFriends(r.data || []))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleForward = useCallback(async (friend) => {
+    if (!socket || !message.content) return;
+
+    // For forwarding we send plain text. Since the recipient needs to decrypt it
+    // with their key, we need to encrypt it properly. For simplicity we use the
+    // socket send_message flow with the recipient's public key.
+    // We'll re-encrypt the plain text content for the new recipient.
+    try {
+      const { encryptMessage } = await import('../utils/crypto');
+      const [recipientRes, senderRes] = await Promise.all([
+        friend.publicKey
+          ? Promise.resolve({ data: friend })
+          : axios.get(`${API}/users/${friend._id}`),
+        currentUser.publicKey
+          ? Promise.resolve({ data: currentUser })
+          : axios.get(`${API}/users/${currentUser._id}`),
+      ]);
+
+      const privateKey = JSON.parse(localStorage.getItem('privateKey') || 'null');
+      if (!privateKey) { alert('No private key found.'); return; }
+
+      const encrypted = await encryptMessage(
+        message.content,
+        JSON.parse(recipientRes.data.publicKey),
+        JSON.parse(senderRes.data.publicKey)
+      );
+
+      socket.emit('send_message', { receiverId: friend._id, ...encrypted }, (res) => {
+        if (res?.success) setSent(friend.username);
+      });
+    } catch (err) {
+      console.error('forward error:', err);
+    }
+  }, [message, socket, currentUser]);
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1001, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <div onPointerDown={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)' }} />
+      <div style={{
+        position: 'relative',
+        width: '100%',
+        maxWidth: 420,
+        background: 'var(--bg-surface)',
+        borderRadius: '20px 20px 0 0',
+        boxShadow: '0 -8px 40px rgba(0,0,0,0.18)',
+        animation: 'sheetUp 220ms cubic-bezier(0.32,0.72,0,1) forwards',
+        paddingBottom: 'max(env(safe-area-inset-bottom), 8px)',
+        maxHeight: '80vh',
+        display: 'flex',
+        flexDirection: 'column',
+        fontFamily: "'Space Grotesk', ui-sans-serif, system-ui, sans-serif",
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 12, paddingBottom: 4 }}>
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--card-border)' }} />
+        </div>
+        <div style={{ padding: '8px 16px 12px', borderBottom: '1px solid var(--card-border)' }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>Forward to…</h3>
+          {sent && <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--success)' }}>Forwarded to {sent}</p>}
+        </div>
+        <div style={{ overflowY: 'auto', flex: 1 }}>
+          {loading && (
+            <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-secondary)', fontSize: 13 }}>Loading friends…</div>
+          )}
+          {!loading && friends.length === 0 && (
+            <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-secondary)', fontSize: 13 }}>No friends yet.</div>
+          )}
+          {friends.map((f) => (
+            <button
+              key={f._id}
+              onClick={() => handleForward(f)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                width: '100%',
+                padding: '12px 16px',
+                border: 'none',
+                borderBottom: '1px solid var(--card-border)',
+                background: 'transparent',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                textAlign: 'left',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-muted)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              <div style={{
+                width: 36, height: 36, borderRadius: '50%', background: 'var(--accent)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 700, fontSize: 14, color: '#fff', flexShrink: 0,
+              }}>
+                {f.username[0].toUpperCase()}
+              </div>
+              <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>{f.username}</span>
+            </button>
+          ))}
+        </div>
+        <div style={{ padding: '8px 12px' }}>
+          <button
+            onClick={onClose}
+            style={{
+              display: 'block', width: '100%', padding: 13, borderRadius: 14, border: 'none',
+              background: 'var(--bg-muted)', cursor: 'pointer', color: 'var(--text-primary)',
+              fontSize: 15, fontWeight: 600, fontFamily: 'inherit',
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── ChatWindow ────────────────────────────────────────────────────────────────
+
 export default function ChatWindow({ selectedUser, onBack }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { socket, connected, sendMessage, pendingCount } = useSocket();
   const { initiateCall, callState } = useCall();
   const { underground } = useUnderground();
+  const toast = useToast();
   const canCall = callState === 'idle';
-  // VIDEO_CALLS is disabled in MVP — set VITE_ENABLE_VIDEO=true to re-enable
   const videoEnabled = import.meta.env.VITE_ENABLE_VIDEO === 'true';
+
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [peerOnline, setPeerOnline] = useState(false);
   const [peerLastSeen, setPeerLastSeen] = useState(null);
   const [typing, setTyping] = useState(false);
+
+  // Action system state
+  const [actionMessage, setActionMessage] = useState(null);
+  const [replyTo, setReplyTo] = useState(null);
+  const [forwardMsg, setForwardMsg] = useState(null);
+  const [pinnedMessage, setPinnedMessage] = useState(null);
+
   const endRef = useRef(null);
   const typingTimer = useRef(null);
+  const msgRefs = useRef({}); // { [msgId]: DOM element }
 
   const privateKey = useCallback(() =>
     JSON.parse(localStorage.getItem('privateKey') || 'null'), []);
@@ -85,17 +267,23 @@ export default function ChatWindow({ selectedUser, onBack }) {
     }));
   }, [privateKey, user._id]);
 
+  // Load messages + pinned message when conversation changes
   useEffect(() => {
     if (!selectedUser) return;
     setMessages([]);
+    setPinnedMessage(null);
     setPeerOnline(selectedUser.isOnline ?? false);
     setPeerLastSeen(selectedUser.lastSeen ?? null);
     setLoading(true);
 
-    axios.get(`${API}/messages/${selectedUser._id}`)
-      .then(async (res) => {
-        const decrypted = await decrypt(res.data);
+    Promise.all([
+      axios.get(`${API}/messages/${selectedUser._id}`),
+      axios.get(`${API}/messages/pinned/${selectedUser._id}`).catch(() => ({ data: null })),
+    ])
+      .then(async ([msgRes, pinnedRes]) => {
+        const decrypted = await decrypt(msgRes.data);
         setMessages(decrypted);
+        setPinnedMessage(pinnedRes.data || null);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -111,6 +299,7 @@ export default function ChatWindow({ selectedUser, onBack }) {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, typing]);
 
+  // Socket listeners (existing + new action events)
   useEffect(() => {
     if (!socket || !selectedUser) return;
 
@@ -156,12 +345,37 @@ export default function ChatWindow({ selectedUser, onBack }) {
       setTyping(false);
     };
 
+    // ── New action socket events ──────────────────────────────────────────
+
+    const onMessageDeleted = ({ messageId }) => {
+      setMessages((prev) => prev.filter((m) => m._id !== messageId));
+      setPinnedMessage((prev) => (prev?._id === messageId ? null : prev));
+    };
+
+    const onMessagePinned = ({ message: pinnedMsg }) => {
+      // Only update if the pinned message belongs to this conversation
+      const senderId = String(pinnedMsg.sender?._id ?? pinnedMsg.sender);
+      const receiverId = String(pinnedMsg.receiver ?? '');
+      const myId = String(user._id);
+      const peerId = String(selectedUser._id);
+      if ((senderId === peerId && receiverId === myId) || (senderId === myId && receiverId === peerId)) {
+        setPinnedMessage(pinnedMsg);
+      }
+    };
+
+    const onMessageUnpinned = ({ messageId }) => {
+      setPinnedMessage((prev) => (prev?._id === messageId ? null : prev));
+    };
+
     socket.on('new_message', onNewMessage);
     socket.on('message_delivered', onDelivered);
     socket.on('messages_read', onRead);
     socket.on('user_status', onStatus);
     socket.on('user_typing', onTyping);
     socket.on('user_stop_typing', onStopTyping);
+    socket.on('message_deleted', onMessageDeleted);
+    socket.on('message_pinned', onMessagePinned);
+    socket.on('message_unpinned', onMessageUnpinned);
 
     return () => {
       socket.off('new_message', onNewMessage);
@@ -170,12 +384,110 @@ export default function ChatWindow({ selectedUser, onBack }) {
       socket.off('user_status', onStatus);
       socket.off('user_typing', onTyping);
       socket.off('user_stop_typing', onStopTyping);
+      socket.off('message_deleted', onMessageDeleted);
+      socket.off('message_pinned', onMessagePinned);
+      socket.off('message_unpinned', onMessageUnpinned);
     };
   }, [socket, selectedUser, decrypt, user._id]);
 
-  const handleSend = useCallback((encryptedData, expiresIn) => {
+  // ── Action handlers ───────────────────────────────────────────────────────
+
+  const handleAction = useCallback((msg) => {
+    setActionMessage(msg);
+  }, []);
+
+  const handleReply = useCallback((msg) => {
+    const isMsgMine = String(msg.sender?._id ?? msg.sender) === String(user._id);
+    setReplyTo({
+      messageId: msg._id,
+      senderUsername: msg.sender?.username || 'them',
+      preview: msg.content?.slice(0, 100) || '',
+      isMedia: !!msg.mediaUrl,
+      isMine: isMsgMine,
+    });
+    setActionMessage(null);
+  }, [user._id]);
+
+  const handleCopy = useCallback((msg) => {
+    if (!msg.content) return;
+    navigator.clipboard.writeText(msg.content).then(() => {
+      toast?.show('Copied', { type: 'info' });
+    }).catch(() => {
+      // Fallback for older browsers / insecure context
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = msg.content;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        toast?.show('Copied', { type: 'info' });
+      } catch { /* ignore */ }
+    });
+    setActionMessage(null);
+  }, [toast]);
+
+  const handleForward = useCallback((msg) => {
+    setForwardMsg(msg);
+    setActionMessage(null);
+  }, []);
+
+  const handlePin = useCallback(async (msg, shouldPin) => {
+    try {
+      if (shouldPin) {
+        const { data } = await axios.put(`${API}/messages/${msg._id}/pin`);
+        setPinnedMessage(data);
+      } else {
+        await axios.delete(`${API}/messages/${msg._id}/pin`);
+        setPinnedMessage((prev) => (prev?._id === msg._id ? null : prev));
+      }
+    } catch (err) {
+      console.error('pin error:', err);
+    }
+    setActionMessage(null);
+  }, []);
+
+  const handleDelete = useCallback(async (msg, forEveryone) => {
+    try {
+      await axios.delete(`${API}/messages/${msg._id}`, { data: { forEveryone } });
+      if (forEveryone) {
+        setMessages((prev) => prev.filter((m) => m._id !== msg._id));
+      } else {
+        setMessages((prev) => prev.filter((m) => m._id !== msg._id));
+      }
+      setPinnedMessage((prev) => (prev?._id === msg._id ? null : prev));
+    } catch (err) {
+      console.error('delete error:', err);
+    }
+    setActionMessage(null);
+  }, []);
+
+  const handleScrollToPinned = useCallback(() => {
+    if (!pinnedMessage) return;
+    const el = msgRefs.current[pinnedMessage._id];
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [pinnedMessage]);
+
+  const handleUnpinFromBanner = useCallback(async () => {
+    if (!pinnedMessage) return;
+    await handlePin(pinnedMessage, false);
+  }, [pinnedMessage, handlePin]);
+
+  // ── Send handlers ─────────────────────────────────────────────────────────
+
+  const handleSend = useCallback((encryptedData, expiresIn, replyToMeta) => {
     return new Promise((resolve) => {
-      sendMessage({ receiverId: selectedUser._id, ...encryptedData, expiresIn },
+      sendMessage(
+        {
+          receiverId: selectedUser._id,
+          ...encryptedData,
+          expiresIn,
+          ...(replyToMeta && { replyTo: replyToMeta }),
+        },
         async (res) => {
           if (res?.success) {
             const [decrypted] = await decrypt([res.message]);
@@ -200,6 +512,14 @@ export default function ChatWindow({ selectedUser, onBack }) {
       );
     });
   }, [sendMessage, selectedUser]);
+
+  // ── isPinned helper ───────────────────────────────────────────────────────
+
+  const isPinned = useCallback((msg) => {
+    return pinnedMessage?._id === msg._id;
+  }, [pinnedMessage]);
+
+  // ── Empty state ───────────────────────────────────────────────────────────
 
   if (!selectedUser) {
     return (
@@ -258,7 +578,6 @@ export default function ChatWindow({ selectedUser, onBack }) {
                 d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
             </svg>
           </button>
-          {/* VIDEO_CALLS: hidden in MVP (VITE_ENABLE_VIDEO=true to show) */}
           {videoEnabled && (
             <button
               onClick={() => initiateCall(selectedUser, 'video')}
@@ -293,6 +612,13 @@ export default function ChatWindow({ selectedUser, onBack }) {
           </div>
         </div>
       </div>
+
+      {/* Pinned message banner */}
+      <PinnedBanner
+        pinnedMessage={pinnedMessage}
+        onScrollTo={handleScrollToPinned}
+        onUnpin={handleUnpinFromBanner}
+      />
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2" style={{ background: 'linear-gradient(180deg, var(--bg-deep), var(--bg-muted))' }}>
@@ -329,11 +655,18 @@ export default function ChatWindow({ selectedUser, onBack }) {
         )}
 
         {messages.map((msg) => (
-          <Message
+          <div
             key={msg._id}
-            message={msg}
-            isMine={String(msg.sender?._id ?? msg.sender) === String(user._id)}
-          />
+            ref={(el) => { if (el) msgRefs.current[msg._id] = el; else delete msgRefs.current[msg._id]; }}
+          >
+            <Message
+              message={msg}
+              isMine={String(msg.sender?._id ?? msg.sender) === String(user._id)}
+              onAction={handleAction}
+              onReply={handleReply}
+              onCopy={handleCopy}
+            />
+          </div>
         ))}
 
         {typing && (
@@ -354,7 +687,38 @@ export default function ChatWindow({ selectedUser, onBack }) {
         <div ref={endRef} />
       </div>
 
-      <MessageInput recipient={selectedUser} onSend={handleSend} onSendMedia={handleSendMedia} />
+      <MessageInput
+        recipient={selectedUser}
+        onSend={handleSend}
+        onSendMedia={handleSendMedia}
+        replyTo={replyTo}
+        onClearReply={() => setReplyTo(null)}
+      />
+
+      {/* Action sheet */}
+      {actionMessage && (
+        <MessageActionSheet
+          message={actionMessage}
+          isMine={String(actionMessage.sender?._id ?? actionMessage.sender) === String(user._id)}
+          isPinned={isPinned(actionMessage)}
+          onReply={() => handleReply(actionMessage)}
+          onCopy={() => handleCopy(actionMessage)}
+          onForward={() => handleForward(actionMessage)}
+          onPin={(shouldPin) => handlePin(actionMessage, shouldPin)}
+          onDelete={(forEveryone) => handleDelete(actionMessage, forEveryone)}
+          onClose={() => setActionMessage(null)}
+        />
+      )}
+
+      {/* Forward modal */}
+      {forwardMsg && (
+        <ForwardModal
+          message={forwardMsg}
+          currentUser={user}
+          socket={socket}
+          onClose={() => setForwardMsg(null)}
+        />
+      )}
     </div>
   );
 }

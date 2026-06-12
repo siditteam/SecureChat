@@ -26,6 +26,21 @@ const messageSchema = new mongoose.Schema({
 
   expiresAt: { type: Date, default: null, index: true },
   isDeleted: { type: Boolean, default: false },
+
+  // Reply-to metadata (stored as plain object — not a DB ref so it survives deletions)
+  replyTo: {
+    messageId: { type: mongoose.Schema.Types.ObjectId },
+    senderUsername: { type: String },
+    preview: { type: String },
+    isMedia: { type: Boolean, default: false },
+  },
+
+  // Pin support
+  pinnedAt: { type: Date, default: null },
+  pinnedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+
+  // "Delete for me" — list of user IDs who have hidden this message locally
+  deletedFor: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 }, { timestamps: true });
 
 messageSchema.index({ sender: 1, receiver: 1, createdAt: -1 });

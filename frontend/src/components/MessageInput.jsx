@@ -17,7 +17,7 @@ const EXPIRY_OPTIONS = [
   { label: '24h', value: 86400 },
 ];
 
-export default function MessageInput({ recipient, onSend, onSendMedia }) {
+export default function MessageInput({ recipient, onSend, onSendMedia, replyTo, onClearReply }) {
   const { user } = useAuth();
   const { socket } = useSocket();
   const { underground } = useUnderground();
@@ -88,13 +88,22 @@ export default function MessageInput({ recipient, onSend, onSendMedia }) {
       typingRef.current = false;
       socket?.emit('stop_typing', { receiverId: recipient._id });
 
-      await onSend(encrypted, expiresIn);
+      // Build replyTo metadata to pass along
+      const replyToMeta = replyTo ? {
+        messageId: replyTo.messageId,
+        senderUsername: replyTo.senderUsername,
+        preview: replyTo.preview,
+        isMedia: replyTo.isMedia,
+      } : null;
+
+      await onSend(encrypted, expiresIn, replyToMeta);
+      if (replyTo) onClearReply?.();
     } catch (err) {
       setError(err.message || 'Failed to send message');
     } finally {
       setSending(false);
     }
-  }, [text, sending, recipient, user, expiresIn, onSend, socket]);
+  }, [text, sending, recipient, user, expiresIn, onSend, socket, replyTo, onClearReply]);
 
   const handleSendMedia = useCallback(async (file, { viewOnce }) => {
     const formData = new FormData();
@@ -111,6 +120,39 @@ export default function MessageInput({ recipient, onSend, onSendMedia }) {
     <>
       <div className="px-3 pt-3 bg-ink-800/90 backdrop-blur-xl border-t border-white/10 shadow-lg" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}>
         {error && <p className="text-error text-xs mb-2 px-1 font-medium">{error}</p>}
+
+        {/* Reply preview bar */}
+        {replyTo && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'stretch',
+            gap: 0,
+            marginBottom: 8,
+            borderRadius: 10,
+            overflow: 'hidden',
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}>
+            {/* Accent bar */}
+            <div style={{ width: 3, background: 'var(--accent)', flexShrink: 0 }} />
+            <div style={{ flex: 1, padding: '7px 10px', minWidth: 0 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)', marginBottom: 1 }}>
+                {replyTo.isMine ? 'You' : replyTo.senderUsername}
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {replyTo.isMedia ? 'Photo / Video' : replyTo.preview}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClearReply}
+              style={{ padding: '0 12px', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}
+              title="Cancel reply"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
         {/* Timer picker */}
         {showTimer && (

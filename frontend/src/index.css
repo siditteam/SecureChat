@@ -306,6 +306,32 @@ body {
   color: var(--text-secondary);
 }
 
+/* ── Message action sheet animation ─────────────────────────────────────── */
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* Hover action bar — only shows on devices with a real hover pointer */
+@media (hover: hover) {
+  .msg-bubble-wrap:hover .msg-hover-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.msg-hover-actions {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+}
+
+/* Prevent text selection during long-press detection */
+.msg-bubble-wrap {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 /* ── Underground Mode Theme ──────────────────────────────────────────────── */
 html.underground {
   --bg-deep:    #030B10;
