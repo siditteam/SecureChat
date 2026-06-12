@@ -9,6 +9,35 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sessionReplaced, setSessionReplaced] = useState(false);
+
+  // Socket-side session replacement (real-time kick)
+  useEffect(() => {
+    const handler = () => {
+      setUser(null);
+      setSessionReplaced(true);
+    };
+    window.addEventListener('unddr:session_replaced', handler);
+    return () => window.removeEventListener('unddr:session_replaced', handler);
+  }, []);
+
+  // Global axios interceptor — catches SESSION_REPLACED on any API call
+  useEffect(() => {
+    const id = axios.interceptors.response.use(
+      (r) => r,
+      (err) => {
+        if (err.response?.data?.code === 'SESSION_REPLACED') {
+          localStorage.removeItem('token');
+          localStorage.removeItem('privateKey');
+          delete axios.defaults.headers.common['Authorization'];
+          setUser(null);
+          setSessionReplaced(true);
+        }
+        return Promise.reject(err);
+      }
+    );
+    return () => axios.interceptors.response.eject(id);
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -95,7 +124,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, sendOtp, verifyOtp, register, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, sessionReplaced, clearSessionReplaced: () => setSessionReplaced(false), sendOtp, verifyOtp, register, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

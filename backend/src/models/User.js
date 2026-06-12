@@ -41,6 +41,8 @@ const userSchema = new mongoose.Schema({
   appealMessage:      { type: String, default: null },
   appealSubmittedAt:  { type: Date, default: null },
   blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  // Increments on every login — stale JWTs from other devices become invalid
+  loginVersion: { type: Number, default: 0 },
 }, { timestamps: true });
 
 userSchema.methods.toPublicJSON = function () {

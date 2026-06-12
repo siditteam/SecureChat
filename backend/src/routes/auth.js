@@ -9,11 +9,12 @@ const Invite = require('../models/Invite');
 const FriendRequest = require('../models/FriendRequest');
 const authMiddleware = require('../middleware/auth');
 const { sendSMS } = require('../services/sms');
+const ss = require('../socketState');
 
 const router = express.Router();
 
-const generateToken = (userId) =>
-  jwt.sign({ userId: userId.toString() }, process.env.JWT_SECRET, { expiresIn: '7d' });
+const generateToken = (userId, loginVersion) =>
+  jwt.sign({ userId: userId.toString(), loginVersion }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
 const otpLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -153,6 +154,7 @@ router.post('/register', async (req, res) => {
       accountStatus: 'probation',
       probationEndsAt,
       invitedBy: inviteDoc ? inviteDoc.createdBy : null,
+      loginVersion: 1,
     });
 
     await PhoneOTP.deleteOne({ _id: record._id });
@@ -168,7 +170,7 @@ router.post('/register', async (req, res) => {
       await FriendRequest.create({ sender: inviteDoc.createdBy, receiver: user._id, status: 'accepted' });
     }
 
-    res.status(201).json({ token: generateToken(user._id), user: user.toPublicJSON() });
+    res.status(201).json({ token: generateToken(user._id, 1), user: user.toPublicJSON() });
   } catch (err) {
     console.error('register error:', err.message || err);
     if (err.code === 11000) {
@@ -226,12 +228,20 @@ router.post('/login', async (req, res) => {
 
     if (publicKey && publicKey !== user.publicKey) {
       user.publicKey = publicKey;
-      await user.save({ validateBeforeSave: false });
     }
+
+    // Increment loginVersion — invalidates all other active sessions
+    user.loginVersion = (user.loginVersion || 0) + 1;
+    await user.save({ validateBeforeSave: false });
+
+    // Kick any existing socket connection for this user
+    ss.emit(String(user._id), 'session_replaced', {
+      message: 'You signed in on another device. This session has ended.',
+    });
 
     await PhoneOTP.deleteOne({ _id: record._id });
 
-    res.json({ token: generateToken(user._id), user: user.toPublicJSON() });
+    res.json({ token: generateToken(user._id, user.loginVersion), user: user.toPublicJSON() });
   } catch (err) {
     console.error('login error:', err);
     res.status(500).json({ message: 'Login failed.' });

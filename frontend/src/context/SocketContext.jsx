@@ -28,6 +28,15 @@ export function SocketProvider({ children }) {
     s.on('connect', () => setConnected(true));
     s.on('disconnect', () => setConnected(false));
 
+    // Another device logged in — mark this session as replaced
+    s.on('session_replaced', () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('privateKey');
+      s.disconnect();
+      // Trigger the replaced state via a custom event the AuthContext interceptor will catch
+      window.dispatchEvent(new CustomEvent('unddr:session_replaced'));
+    });
+
     setSocket(s);
     return () => { s.disconnect(); };
   }, [user]);
