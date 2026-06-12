@@ -576,78 +576,204 @@ function FivePrinciples() {
 }
 
 // ── 9. Install Unddr ───────────────────────────────────────────────────────────
-const PLATFORMS = [
-  {
-    name: 'iPhone · Safari',
-    icon: 'M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18h3',
-    steps: [
-      'Open unddrground.com in Safari.',
-      'Tap the Share button — the square with an arrow pointing up.',
-      'Scroll and tap Add to Home Screen.',
-      'Tap Add.',
-    ],
-  },
-  {
-    name: 'Android · Chrome',
-    icon: 'M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25m18 0A2.25 2.25 0 0 0 18.75 3H5.25A2.25 2.25 0 0 0 3 5.25m18 0H3',
-    steps: [
-      'Open unddrground.com in Chrome.',
-      'Tap the install banner, or open the three-dot menu.',
-      'Tap Add to Home Screen or Install.',
-      'Open Unddr from your home screen.',
-    ],
-  },
-];
+// Visual phone mockup helpers
+function PhoneMockup({ children }) {
+  return (
+    <div style={{ background: '#f1f5f9', borderRadius: 16, padding: 10, border: '1px solid rgba(15,23,36,0.07)', marginBottom: 20 }}>
+      {children}
+    </div>
+  );
+}
+function BrowserBar({ children }) {
+  return (
+    <div style={{ background: '#fff', borderRadius: 8, padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6, boxShadow: '0 1px 3px rgba(15,23,36,0.07)' }}>
+      {children}
+    </div>
+  );
+}
+function HighlightBadge({ label }) {
+  return (
+    <div style={{ position: 'absolute', top: -22, left: '50%', transform: 'translateX(-50%)', background: ACCENT, color: '#fff', fontSize: 8, fontWeight: 700, padding: '2px 7px', borderRadius: 999, whiteSpace: 'nowrap', letterSpacing: '0.06em' }}>
+      {label}
+    </div>
+  );
+}
 
 function InstallUnddr() {
   const mobile = useIsMobile();
+  const stepStyle = (n) => ({
+    width: 22, height: 22, borderRadius: '50%', background: 'rgba(10,163,163,0.08)',
+    border: '1px solid rgba(10,163,163,0.18)', color: ACCENT, fontFamily: F,
+    fontWeight: 700, fontSize: 9, display: 'flex', alignItems: 'center',
+    justifyContent: 'center', flexShrink: 0, marginTop: 2, letterSpacing: '0.05em',
+  });
+
   return (
-    <section style={{ background: BG.surface }}>
-      <SectionDivider />
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: mobile ? '64px 20px' : '112px 24px' }}>
+    <section style={{ background: BG.surface, borderTop: `1px solid ${BORDER.metal}` }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: mobile ? '56px 20px' : '88px 24px' }}>
 
         <Reveal>
-          <span style={tag}>Install Unddr</span>
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 20, marginBottom: 56 }}>
-            <h2 style={{ fontFamily: F, fontWeight: 700, fontSize: 'clamp(36px, 5vw, 52px)', lineHeight: 1.07, letterSpacing: '-0.03em', color: T.primary, margin: 0 }}>
-              No App Store.<br />No Play Store.
-            </h2>
-            <p style={{ fontSize: 13, color: T.muted, maxWidth: mobile ? '100%' : 200, lineHeight: 1.7, textAlign: mobile ? 'left' : 'right' }}>
-              Open it in your browser and add it to your phone in four steps.
-            </p>
+          <span style={tag}>Get the app</span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 48 }}>
+            <div>
+              <h2 style={{ fontFamily: F, fontWeight: 700, fontSize: 'clamp(32px, 5vw, 48px)', lineHeight: 1.07, letterSpacing: '-0.03em', color: T.primary, marginBottom: 12 }}>
+                No App Store.<br />Add it in 3 taps.
+              </h2>
+              <p style={{ fontSize: 16, color: T.secondary, lineHeight: 1.65, maxWidth: 420 }}>
+                Works on any phone. No download. Open unddrground.com in your browser and follow the steps below.
+              </p>
+            </div>
+            <Link to="/login" style={{
+              fontFamily: F, fontWeight: 700, fontSize: 14,
+              border: `1px solid ${BORDER.soft}`, color: T.secondary,
+              padding: '11px 22px', borderRadius: 99, textDecoration: 'none',
+              transition: 'all 0.2s', flexShrink: 0,
+            }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.color = ACCENT; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER.soft; e.currentTarget.style.color = T.secondary; }}
+            >
+              Skip install, open in browser →
+            </Link>
           </div>
         </Reveal>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
-          {PLATFORMS.map((pl, pi) => (
-            <Reveal key={pl.name} delay={pi * 100}>
-              <div style={{ background: CARD.raised, border: `1px solid ${BORDER.soft}`, borderRadius: 20, padding: '32px 28px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32 }}>
-                  <span style={{ color: ACCENT }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} style={{ width: 18, height: 18 }}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d={pl.icon} />
-                    </svg>
-                  </span>
-                  <span style={{ fontFamily: F, fontWeight: 700, fontSize: 13, color: T.primary, letterSpacing: '0.04em' }}>{pl.name}</span>
-                </div>
-                <ol style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {pl.steps.map((step, si) => (
-                    <li key={si} style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                      <span style={{
-                        width: 22, height: 22, borderRadius: '50%', flexShrink: 0, marginTop: 1,
-                        background: `rgba(10,163,163,0.08)`, border: `1px solid rgba(10,163,163,0.20)`,
-                        color: ACCENT, fontFamily: F, fontWeight: 700, fontSize: 10,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        {si + 1}
-                      </span>
-                      <span style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>{step}</span>
-                    </li>
-                  ))}
-                </ol>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
+
+          {/* ── iPhone · Safari ── */}
+          <Reveal delay={60}>
+            <div style={{ background: CARD.raised, border: `1px solid ${BORDER.soft}`, borderRadius: 20, overflow: 'hidden' }}>
+              <div style={{ padding: '22px 22px 0', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
+                <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, color: T.muted }} fill="currentColor">
+                  <path d="M17 2H7a3 3 0 00-3 3v14a3 3 0 003 3h10a3 3 0 003-3V5a3 3 0 00-3-3zm-5 17a1 1 0 110-2 1 1 0 010 2zm4-4H8V6h8v9z"/>
+                </svg>
+                <span style={{ fontFamily: F, fontWeight: 700, fontSize: 13, color: T.primary }}>iPhone · Safari</span>
               </div>
-            </Reveal>
-          ))}
+
+              <div style={{ padding: '0 16px' }}>
+                <PhoneMockup>
+                  {/* Safari top bar */}
+                  <BrowserBar>
+                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#e2e8f0', flexShrink: 0 }} />
+                    <div style={{ flex: 1, height: 6, background: '#e2e8f0', borderRadius: 4, fontSize: 8, color: '#94a3b8', display: 'flex', alignItems: 'center', paddingLeft: 6 }}>unddrground.com</div>
+                  </BrowserBar>
+                  {/* Page preview */}
+                  <div style={{ background: '#fff', borderRadius: 6, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6 }}>
+                    <span style={{ fontFamily: F, fontWeight: 800, fontSize: 11, color: ACCENT, letterSpacing: '-0.01em' }}>UNDDR</span>
+                  </div>
+                  {/* Safari bottom toolbar */}
+                  <div style={{ background: '#fff', borderRadius: 8, padding: '7px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <svg viewBox="0 0 24 24" style={{ width: 14, height: 14, color: '#cbd5e1' }} fill="none" stroke="currentColor" strokeWidth={2}><path d="M15 19l-7-7 7-7"/></svg>
+                    <svg viewBox="0 0 24 24" style={{ width: 14, height: 14, color: '#cbd5e1' }} fill="none" stroke="currentColor" strokeWidth={2}><path d="M9 5l7 7-7 7"/></svg>
+                    {/* HIGHLIGHTED: Share button */}
+                    <div style={{ position: 'relative' }}>
+                      <HighlightBadge label="TAP HERE" />
+                      <div style={{ background: 'rgba(10,163,163,0.12)', border: '2px solid #0AA3A3', borderRadius: 7, padding: '4px 5px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg viewBox="0 0 24 24" style={{ width: 14, height: 14, color: ACCENT }} fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 3v13M8 7l4-4 4 4"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <svg viewBox="0 0 24 24" style={{ width: 14, height: 14, color: '#cbd5e1' }} fill="none" stroke="currentColor" strokeWidth={2}><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    <svg viewBox="0 0 24 24" style={{ width: 14, height: 14, color: '#cbd5e1' }} fill="none" stroke="currentColor" strokeWidth={2}><circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/></svg>
+                  </div>
+                  {/* Sheet popup hint */}
+                  <div style={{ background: '#fff', borderRadius: 8, padding: '7px 10px', marginTop: 4, border: '1px solid rgba(15,23,36,0.07)' }}>
+                    {['AirDrop', 'Copy', 'Safari Reader'].map(item => (
+                      <div key={item} style={{ fontSize: 9, color: '#94a3b8', padding: '3px 0' }}>{item}</div>
+                    ))}
+                    <div style={{ fontSize: 9, fontWeight: 700, color: ACCENT, background: 'rgba(10,163,163,0.08)', borderRadius: 4, padding: '4px 6px', display: 'flex', alignItems: 'center', gap: 4, border: '1px solid rgba(10,163,163,0.18)' }}>
+                      <svg viewBox="0 0 24 24" style={{ width: 9, height: 9 }} fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                      Add to Home Screen ← tap this
+                    </div>
+                  </div>
+                </PhoneMockup>
+              </div>
+
+              <div style={{ padding: '0 22px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {[
+                  ['01', 'Tap the Share button', 'The box-with-arrow icon in Safari\'s bottom bar. It\'s highlighted in teal above.'],
+                  ['02', 'Tap "Add to Home Screen"', 'Scroll the share sheet — it\'s in the list of actions. Tap it.'],
+                  ['03', 'Tap Add in the top-right', 'A name and icon preview appears. Tap Add. Done.'],
+                ].map(([n, title, desc]) => (
+                  <div key={n} style={{ display: 'flex', gap: 11 }}>
+                    <span style={stepStyle(n)}>{n}</span>
+                    <div>
+                      <p style={{ fontFamily: F, fontWeight: 600, fontSize: 13, color: T.primary, marginBottom: 2 }}>{title}</p>
+                      <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.55 }}>{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
+
+          {/* ── Android · Chrome ── */}
+          <Reveal delay={130}>
+            <div style={{ background: CARD.raised, border: `1px solid ${BORDER.soft}`, borderRadius: 20, overflow: 'hidden' }}>
+              <div style={{ padding: '22px 22px 0', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
+                <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, color: T.muted }} fill="currentColor">
+                  <path d="M17 2H7a3 3 0 00-3 3v14a3 3 0 003 3h10a3 3 0 003-3V5a3 3 0 00-3-3zm-5 17a1 1 0 110-2 1 1 0 010 2zm4-4H8V6h8v9z"/>
+                </svg>
+                <span style={{ fontFamily: F, fontWeight: 700, fontSize: 13, color: T.primary }}>Android · Chrome</span>
+              </div>
+
+              <div style={{ padding: '0 16px' }}>
+                <PhoneMockup>
+                  {/* Chrome top bar with highlighted 3-dot */}
+                  <BrowserBar>
+                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#e2e8f0', flexShrink: 0 }} />
+                    <div style={{ flex: 1, height: 6, background: '#e2e8f0', borderRadius: 4, fontSize: 8, color: '#94a3b8', display: 'flex', alignItems: 'center', paddingLeft: 6 }}>unddrground.com</div>
+                    <div style={{ width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 4 }}>
+                      <svg viewBox="0 0 24 24" style={{ width: 11, height: 11, color: '#94a3b8' }} fill="none" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+                    </div>
+                    {/* HIGHLIGHTED: 3-dot menu */}
+                    <div style={{ position: 'relative', marginLeft: 2 }}>
+                      <HighlightBadge label="TAP HERE" />
+                      <div style={{ background: 'rgba(10,163,163,0.12)', border: '2px solid #0AA3A3', borderRadius: 5, padding: '4px 4px', display: 'flex', gap: '2px', alignItems: 'center' }}>
+                        {[0,1,2].map(i => <div key={i} style={{ width: 3, height: 3, borderRadius: '50%', background: ACCENT }} />)}
+                      </div>
+                    </div>
+                  </BrowserBar>
+
+                  {/* Dropdown menu */}
+                  <div style={{ background: '#fff', borderRadius: 8, padding: '5px 4px', marginBottom: 6, boxShadow: '0 2px 8px rgba(15,23,36,0.10)', border: '1px solid rgba(15,23,36,0.06)' }}>
+                    {['New tab', 'Bookmarks', 'History', 'Downloads'].map(item => (
+                      <div key={item} style={{ padding: '5px 10px', fontSize: 9, color: '#94a3b8' }}>{item}</div>
+                    ))}
+                    {/* HIGHLIGHTED menu item */}
+                    <div style={{ padding: '5px 10px', fontSize: 9, fontWeight: 700, color: ACCENT, background: 'rgba(10,163,163,0.08)', borderRadius: 5, display: 'flex', alignItems: 'center', gap: 5, border: '1px solid rgba(10,163,163,0.18)', margin: '2px 3px' }}>
+                      <svg viewBox="0 0 24 24" style={{ width: 9, height: 9 }} fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                      Add to Home Screen ← tap this
+                    </div>
+                    {['Settings', 'Help'].map(item => (
+                      <div key={item} style={{ padding: '5px 10px', fontSize: 9, color: '#94a3b8' }}>{item}</div>
+                    ))}
+                  </div>
+
+                  {/* Page preview */}
+                  <div style={{ background: '#fff', borderRadius: 6, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontFamily: F, fontWeight: 800, fontSize: 11, color: ACCENT, letterSpacing: '-0.01em' }}>UNDDR</span>
+                  </div>
+                </PhoneMockup>
+              </div>
+
+              <div style={{ padding: '0 22px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {[
+                  ['01', 'Tap the ⋮ menu', 'The three-dot icon in the top-right corner of Chrome — highlighted in teal above.'],
+                  ['02', 'Tap "Add to Home Screen"', 'It may also appear as "Install app" if Chrome auto-detects the PWA banner.'],
+                  ['03', 'Tap Install or Add', 'The icon appears on your home screen immediately.'],
+                ].map(([n, title, desc]) => (
+                  <div key={n} style={{ display: 'flex', gap: 11 }}>
+                    <span style={stepStyle(n)}>{n}</span>
+                    <div>
+                      <p style={{ fontFamily: F, fontWeight: 600, fontSize: 13, color: T.primary, marginBottom: 2 }}>{title}</p>
+                      <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.55 }}>{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
         </div>
       </div>
     </section>
@@ -998,6 +1124,7 @@ export default function LandingPage() {
     <div style={{ background: BG.deep, color: T.primary, fontFamily: F, overflowX: 'hidden' }}>
       <Nav />
       <Hero />
+      <InstallUnddr />
       <WhyDifferent />
       <TheQuietRoom />
       <HowYouGetIn />
@@ -1008,7 +1135,6 @@ export default function LandingPage() {
       <TheOneRule />
       <WelcomeNotWelcome />
       <FivePrinciples />
-      <InstallUnddr />
       <Moderation />
       <ApplySection />
       <FinalCTA />
