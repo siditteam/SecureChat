@@ -85,6 +85,7 @@ function SectionDivider() {
 // ── Nav ────────────────────────────────────────────────────────────────────────
 function Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 60);
     window.addEventListener('scroll', fn, { passive: true });
@@ -92,46 +93,63 @@ function Nav() {
   }, []);
 
   return (
-    <nav style={{
-      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
-      transition: 'all 0.35s ease',
-      background:    scrolled ? 'rgba(247,251,255,0.92)'           : 'transparent',
-      backdropFilter:scrolled ? 'blur(16px) saturate(1.5)'        : 'none',
-      borderBottom:  scrolled ? `1px solid rgba(15,23,36,0.08)`  : '1px solid transparent',
-    }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        {/* Mark: teal pill with letter U, then UNDDR wordmark */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 9, background: ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <span style={{ fontFamily: F, fontWeight: 800, fontSize: 15, color: '#07050B', letterSpacing: '-0.03em' }}>U</span>
+    <>
+      {showModal && <InviteModal onClose={() => setShowModal(false)} />}
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+        transition: 'all 0.35s ease',
+        background:    scrolled ? 'rgba(247,251,255,0.92)'           : 'transparent',
+        backdropFilter:scrolled ? 'blur(16px) saturate(1.5)'        : 'none',
+        borderBottom:  scrolled ? `1px solid rgba(15,23,36,0.08)`  : '1px solid transparent',
+      }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {/* Mark */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 9, background: ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ fontFamily: F, fontWeight: 800, fontSize: 15, color: '#07050B', letterSpacing: '-0.03em' }}>U</span>
+            </div>
+            <span style={{ fontFamily: F, fontWeight: 700, fontSize: 18, color: ACCENT, letterSpacing: '-0.02em' }}>UNDDR</span>
           </div>
-          <span style={{ fontFamily: F, fontWeight: 700, fontSize: 18, color: ACCENT, letterSpacing: '-0.02em' }}>UNDDR</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Link to="/apply" style={{ fontFamily: F, fontWeight: 600, fontSize: 13, color: T.secondary, textDecoration: 'none', padding: '10px 14px', transition: 'color 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.color = ACCENT}
+              onMouseLeave={e => e.currentTarget.style.color = T.secondary}
+            >Apply</Link>
+            <button
+              onClick={() => setShowModal(true)}
+              style={{
+                fontFamily: F, fontWeight: 600, fontSize: 13,
+                border: `1px solid ${BORDER.soft}`, color: T.secondary,
+                padding: '9px 16px', borderRadius: 99,
+                background: 'transparent', cursor: 'pointer', transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.color = ACCENT; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER.soft; e.currentTarget.style.color = T.secondary; }}
+            >
+              I have an invite
+            </button>
+            <Link to="/login" style={{
+              fontFamily: F, fontWeight: 700, fontSize: 13,
+              background: ACCENT, color: '#ffffff',
+              padding: '10px 20px', borderRadius: 99,
+              textDecoration: 'none', transition: 'all 0.2s',
+            }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-strong)'}
+              onMouseLeave={e => e.currentTarget.style.background = ACCENT}
+            >
+              Open UNDDR →
+            </Link>
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Link to="/apply" style={{ fontFamily: F, fontWeight: 600, fontSize: 13, color: T.secondary, textDecoration: 'none', padding: '10px 14px', transition: 'color 0.15s' }}
-            onMouseEnter={e => e.currentTarget.style.color = ACCENT}
-            onMouseLeave={e => e.currentTarget.style.color = T.secondary}
-          >Apply</Link>
-          <Link to="/login" style={{
-            fontFamily: F, fontWeight: 700, fontSize: 13,
-            background: ACCENT, color: '#ffffff',
-            padding: '10px 20px', borderRadius: 99,
-            textDecoration: 'none', transition: 'all 0.2s',
-          }}
-            onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-strong)'}
-            onMouseLeave={e => e.currentTarget.style.background = ACCENT}
-          >
-            Open UNDDR →
-          </Link>
-        </div>
-      </div>
-    </nav>
+      </nav>
+    </>
   );
 }
 
 // ── 1. Hero ────────────────────────────────────────────────────────────────────
 function Hero() {
   const [ready, setReady] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const mobile = useIsMobile();
   useEffect(() => { const t = setTimeout(() => setReady(true), 100); return () => clearTimeout(t); }, []);
 
@@ -179,20 +197,24 @@ function Hero() {
           No feed. No followers. No algorithm.
         </p>
 
+        {showModal && <InviteModal onClose={() => setShowModal(false)} />}
+
         {/* CTAs */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
-          <Link to="/login" style={{
-            fontFamily: F, fontWeight: 700, fontSize: 15,
-            background: ACCENT, color: '#ffffff',
-            padding: '14px 34px', borderRadius: 99,
-            textDecoration: 'none', transition: 'all 0.2s',
-          }}
+          <button
+            onClick={() => setShowModal(true)}
+            style={{
+              fontFamily: F, fontWeight: 700, fontSize: 15,
+              background: ACCENT, color: '#ffffff',
+              padding: '14px 34px', borderRadius: 99,
+              border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+            }}
             onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-strong)'}
             onMouseLeave={e => e.currentTarget.style.background = ACCENT}
           >
-            Open UNDDR →
-          </Link>
-          <Link to="/manual" style={{
+            I have an invite →
+          </button>
+          <Link to="/login" style={{
             fontFamily: F, fontWeight: 600, fontSize: 15,
             border: `1px solid ${BORDER.soft}`, color: T.secondary,
             padding: '14px 34px', borderRadius: 99,
@@ -201,7 +223,7 @@ function Hero() {
             onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(15,23,36,0.22)'; e.currentTarget.style.color = T.primary; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER.soft; e.currentTarget.style.color = T.secondary; }}
           >
-            Read the Manual
+            Open UNDDR
           </Link>
         </div>
 
