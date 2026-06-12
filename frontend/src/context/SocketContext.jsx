@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { enqueue, dequeueAll } from '../utils/offlineQueue';
 
 const SocketContext = createContext(null);
 
@@ -10,6 +11,29 @@ export function SocketProvider({ children }) {
   const { user } = useAuth();
   const [socket, setSocket] = useState(null);
   const [connected, setConnected] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  const flushQueue = useCallback(async (s) => {
+    try {
+      const items = await dequeueAll();
+      if (!items.length) return;
+      setPendingCount(0);
+      for (const item of items) {
+        const { id: _id, queuedAt: _queuedAt, ...payload } = item;
+        s.emit('send_message', payload);
+      }
+    } catch { /* IndexedDB may be unavailable */ }
+  }, []);
+
+  // Send a message: if connected, emit immediately; if offline, enqueue
+  const sendMessage = useCallback((payload, callback) => {
+    if (socket?.connected) {
+      socket.emit('send_message', payload, callback);
+    } else {
+      enqueue(payload).then(() => setPendingCount((n) => n + 1));
+      callback?.({ success: false, queued: true });
+    }
+  }, [socket]);
 
   useEffect(() => {
     if (!user) {
@@ -25,7 +49,10 @@ export function SocketProvider({ children }) {
       reconnectionAttempts: 5,
     });
 
-    s.on('connect', () => setConnected(true));
+    s.on('connect', () => {
+      setConnected(true);
+      flushQueue(s);
+    });
     s.on('disconnect', () => setConnected(false));
 
     // Another device logged in — mark this session as replaced
@@ -33,16 +60,15 @@ export function SocketProvider({ children }) {
       localStorage.removeItem('token');
       localStorage.removeItem('privateKey');
       s.disconnect();
-      // Trigger the replaced state via a custom event the AuthContext interceptor will catch
       window.dispatchEvent(new CustomEvent('unddr:session_replaced'));
     });
 
     setSocket(s);
     return () => { s.disconnect(); };
-  }, [user]);
+  }, [user, flushQueue]);
 
   return (
-    <SocketContext.Provider value={{ socket, connected }}>
+    <SocketContext.Provider value={{ socket, connected, pendingCount, sendMessage }}>
       {children}
     </SocketContext.Provider>
   );

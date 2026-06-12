@@ -11,6 +11,8 @@ const inviteSchema = new mongoose.Schema({
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   usedBy:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   usedAt:    { type: Date, default: null },
+  vouchedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  vouchNote: { type: String, default: null },
   expiresAt: { type: Date, default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) },
   status:    { type: String, enum: ['active', 'used', 'expired', 'revoked'], default: 'active' },
 }, { timestamps: true });

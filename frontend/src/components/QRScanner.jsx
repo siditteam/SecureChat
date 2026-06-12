@@ -90,10 +90,11 @@ export default function QRScanner({ onClose, onAdded }) {
       <div className="bg-[#202c33] rounded-2xl w-full max-w-xs shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-          <h3 className="text-white font-semibold text-base">Scan QR Code</h3>
+          <h3 style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: 16 }}>Scan QR Code</h3>
           <button
             onClick={onClose}
-            className="text-white/50 hover:text-white p-1 rounded-full hover:bg-white/10 transition"
+            className="p-1 rounded-full hover:bg-white/10 transition"
+            style={{ color: 'var(--text-secondary)' }}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -105,7 +106,7 @@ export default function QRScanner({ onClose, onAdded }) {
         {phase === 'scanning' && (
           <div className="p-4 flex flex-col items-center gap-3">
             <div id="qr-reader-box" className="w-full rounded-xl overflow-hidden" />
-            <p className="text-white/40 text-xs text-center">
+            <p style={{ color: 'var(--text-secondary)', fontSize: 12, textAlign: 'center' }}>
               Point your camera at a Unddr QR code
             </p>
           </div>
@@ -119,8 +120,8 @@ export default function QRScanner({ onClose, onAdded }) {
             </div>
 
             <div>
-              <p className="text-white font-bold text-lg">@{profile.username}</p>
-              <p className="text-white/50 text-sm mt-0.5">Unddr user</p>
+              <p style={{ color: 'var(--text-primary)', fontSize: 18, fontWeight: 700 }}>@{profile.username}</p>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 6 }}>Unddr user</p>
             </div>
 
             {friendStatus === 'accepted' && (
@@ -139,7 +140,8 @@ export default function QRScanner({ onClose, onAdded }) {
               <button
                 onClick={sendRequest}
                 disabled={loading}
-                className="w-full bg-[#00a884] hover:bg-[#02b397] text-white font-semibold rounded-xl py-3 transition disabled:opacity-50 text-sm"
+                className="w-full bg-[#00a884] hover:bg-[#02b397] font-semibold rounded-xl py-3 transition disabled:opacity-50 text-sm"
+                style={{ color: 'var(--text-on-accent, #fff)' }}
               >
                 {loading
                   ? <span className="flex items-center justify-center gap-2">
@@ -152,7 +154,7 @@ export default function QRScanner({ onClose, onAdded }) {
 
             {err && <p className="text-red-400 text-sm">{err}</p>}
 
-            <button onClick={onClose} className="text-white/40 text-xs hover:text-white/70 transition">
+            <button onClick={onClose} className="text-xs transition" style={{ color: 'var(--text-secondary)' }}>
               Close
             </button>
           </div>
@@ -167,14 +169,15 @@ export default function QRScanner({ onClose, onAdded }) {
               </svg>
             </div>
             <div>
-              <p className="text-white font-bold text-base">Request sent!</p>
-              <p className="text-white/50 text-sm mt-1">
+              <p style={{ color: 'var(--text-primary)', fontWeight: 700 }} className="text-base">Request sent!</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
                 Waiting for @{profile?.username} to accept
               </p>
             </div>
             <button
               onClick={onClose}
-              className="w-full bg-[#2a3942] hover:bg-[#3a4a52] text-white font-semibold rounded-xl py-3 transition text-sm"
+              className="w-full bg-[#2a3942] hover:bg-[#3a4a52] font-semibold rounded-xl py-3 transition text-sm"
+              style={{ color: 'var(--text-primary)' }}
             >
               Done
             </button>
@@ -190,12 +193,13 @@ export default function QRScanner({ onClose, onAdded }) {
               </svg>
             </div>
             <div>
-              <p className="text-white font-bold text-base">Scan failed</p>
-              <p className="text-white/50 text-sm mt-1">{err}</p>
+              <p style={{ color: 'var(--text-primary)', fontWeight: 700 }} className="text-base">Scan failed</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>{err}</p>
             </div>
             <button
               onClick={onClose}
-              className="w-full bg-[#2a3942] hover:bg-[#3a4a52] text-white font-semibold rounded-xl py-3 transition text-sm"
+              className="w-full bg-[#2a3942] hover:bg-[#3a4a52] font-semibold rounded-xl py-3 transition text-sm"
+              style={{ color: 'var(--text-primary)' }}
             >
               Close
             </button>

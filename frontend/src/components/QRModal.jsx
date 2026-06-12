@@ -80,16 +80,16 @@ export default function QRModal({ user, onClose }) {
       <div className="bg-ink-800 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+        <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
           <div>
-            <h3 className="text-white font-semibold text-base">Invite someone</h3>
-            <p className="text-white/40 text-xs mt-0.5">
+            <h3 style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: 14 }}>Invite someone</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 12, marginTop: 4 }}>
               {onProbation
                 ? `Unlocks in ${probationDays} day${probationDays === 1 ? '' : 's'}`
                 : `${tokens} invite token${tokens === 1 ? '' : 's'} remaining`}
             </p>
           </div>
-          <button onClick={onClose} className="text-white/40 hover:text-white p-1 rounded-full hover:bg-white/10 transition">
+          <button onClick={onClose} className="p-1 rounded-full" style={{ color: 'var(--text-secondary)' }}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -101,9 +101,9 @@ export default function QRModal({ user, onClose }) {
           {/* Probation state */}
           {onProbation && (
             <div className="bg-primary-500/10 border border-primary-500/20 rounded-xl p-4 text-center space-y-1">
-              <p className="text-primary-400 font-semibold text-sm">You're still in your first week</p>
-              <p className="text-white/40 text-xs">
-                Invite tokens unlock {probationDays <= 0 ? 'soon' : `in ${probationDays} day${probationDays === 1 ? '' : 's'}`}.
+              <p style={{ color: 'var(--accent)', fontWeight: 600, fontSize: 14 }}>You're still in your first week</p>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 12 }}>
+                Invite tokens unlock {probationDays <= 0 ? 'soon' : `in ${probationDays} day${probationDays === 1 ? '' : 's'}` }.
                 Enjoy settling in.
               </p>
             </div>
@@ -111,9 +111,9 @@ export default function QRModal({ user, onClose }) {
 
           {/* No tokens left */}
           {!onProbation && tokens === 0 && activeInvites.length === 0 && (
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-              <p className="text-white/50 text-sm">You've used both invite tokens.</p>
-              <p className="text-white/30 text-xs mt-1">Each member gets 2 lifetime invites.</p>
+            <div className="rounded-xl p-4 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>You've used both invite tokens.</p>
+              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, marginTop: 6 }}>Each member gets 2 lifetime invites.</p>
             </div>
           )}
 
@@ -140,20 +140,19 @@ export default function QRModal({ user, onClose }) {
               {activeInvites.map((inv) => {
                 const url = `${window.location.origin}/invite/${inv.code}`;
                 return (
-                  <div key={inv.code} className="bg-ink-900 border border-white/10 rounded-xl p-4 space-y-3">
+                  <div key={inv.code} className="bg-ink-900 rounded-xl p-4 space-y-3" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
                     <div className="flex justify-center">
                       <div className="bg-white p-3 rounded-xl ring-4 ring-primary-500/20">
                         <QRCodeSVG value={url} size={160} level="M" includeMargin={false} />
                       </div>
                     </div>
 
-                    <div className="bg-ink-800 rounded-lg px-3 py-2 flex items-center gap-2 border border-white/10">
-                      <p className="text-white/40 text-xs truncate flex-1 font-mono">{url}</p>
+                    <div className="bg-ink-800 rounded-lg px-3 py-2 flex items-center gap-2" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <p style={{ color: 'var(--text-secondary)', fontSize: 12, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{url}</p>
                       <button
                         onClick={() => copy(url, inv.code)}
-                        className={`flex-shrink-0 text-xs font-semibold px-2.5 py-1 rounded-lg transition ${
-                          copied === inv.code ? 'bg-success/20 text-success' : 'bg-white/10 text-white hover:bg-white/20'
-                        }`}
+                        className="flex-shrink-0 text-xs font-semibold px-2.5 py-1 rounded-lg transition"
+                        style={copied === inv.code ? { background: 'rgba(16,185,129,0.12)', color: 'var(--success)' } : { background: 'rgba(255,255,255,0.04)', color: 'var(--text-primary)' }}
                       >
                         {copied === inv.code ? 'Copied!' : 'Copy'}
                       </button>
@@ -162,7 +161,8 @@ export default function QRModal({ user, onClose }) {
                     {canShare && (
                       <button
                         onClick={() => share(url, user.username)}
-                        className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white font-medium rounded-xl py-2.5 text-sm transition"
+                        className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm transition"
+                        style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--text-primary)' }}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -171,7 +171,7 @@ export default function QRModal({ user, onClose }) {
                       </button>
                     )}
 
-                    <p className="text-white/25 text-[10px] text-center">
+                    <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, textAlign: 'center' }}>
                       One-time use · Expires {new Date(inv.expiresAt).toLocaleDateString()}
                     </p>
                   </div>
@@ -183,17 +183,17 @@ export default function QRModal({ user, onClose }) {
           {/* Past invites */}
           {invites.filter((i) => i.status !== 'active').length > 0 && (
             <div className="space-y-1.5">
-              <p className="text-white/30 text-[11px] font-semibold uppercase tracking-wider">Past invites</p>
+              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Past invites</p>
               {invites.filter((i) => i.status !== 'active').map((inv) => (
-                <div key={inv.code} className="flex items-center justify-between px-3 py-2 bg-white/5 rounded-lg">
-                  <span className="text-white/40 text-xs font-mono">{inv.code.slice(0, 8)}…</span>
+                <div key={inv.code} className="flex items-center justify-between px-3 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: 12, fontFamily: 'monospace' }}>{inv.code.slice(0, 8)}…</span>
                   <div className="flex items-center gap-2">
-                    {inv.usedBy && <span className="text-white/50 text-xs">→ @{inv.usedBy.username}</span>}
-                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                      inv.status === 'used' ? 'bg-success/20 text-success' :
-                      inv.status === 'expired' ? 'bg-white/10 text-white/30' :
-                      'bg-error/20 text-error'
-                    }`}>{inv.status}</span>
+                    {inv.usedBy && <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>→ @{inv.usedBy.username}</span>}
+                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style={
+                      inv.status === 'used' ? { background: 'rgba(16,185,129,0.12)', color: 'var(--success)' } :
+                      inv.status === 'expired' ? { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.45)' } :
+                      { background: 'rgba(239,68,68,0.12)', color: 'var(--error)' }
+                    }>{inv.status}</span>
                   </div>
                 </div>
               ))}

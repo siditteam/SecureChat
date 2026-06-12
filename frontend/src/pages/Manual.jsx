@@ -7,8 +7,8 @@ function Rule({ n, title, children }) {
         {n}
       </span>
       <div>
-        <p className="text-white font-semibold text-sm mb-1">{title}</p>
-        <p className="text-white/55 text-sm leading-relaxed">{children}</p>
+        <p style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: 14, marginBottom: 6 }}>{title}</p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6 }}>{children}</p>
       </div>
     </div>
   );
@@ -31,18 +31,18 @@ export default function Manual() {
         {/* Header */}
         <div className="text-center mb-8">
           <img src="/assets/pngs/logo-unddr-icon-128.png" alt="Unddr" className="w-14 h-14 rounded-2xl mx-auto mb-4 shadow-xl shadow-black/50" />
-          <h1 className="text-3xl font-black text-white tracking-tight">The Unddr Manual</h1>
-          <p className="text-white/40 text-sm mt-2">How this place works. Read once. Live it always.</p>
+          <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>The Unddr Manual</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginTop: 8 }}>How this place works. Read once. Live it always.</p>
         </div>
 
         {/* What this is */}
         <Section title="What Unddr is">
-          <p className="text-white/60 text-sm leading-relaxed">
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6 }}>
             Unddr is a small, closed garden. You're here because someone vouched for you personally —
             not an algorithm, not a mass link. That vouching carries weight, both for you and for the
             person who brought you in.
           </p>
-          <p className="text-white/60 text-sm leading-relaxed">
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6 }}>
             It's not a broadcast platform. It's not a place to perform. It's a place to actually talk.
           </p>
         </Section>
@@ -54,7 +54,7 @@ export default function Manual() {
               "Say anything. Just don't try to wound."
             </p>
           </div>
-          <p className="text-white/55 text-sm leading-relaxed">
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6 }}>
             You can talk religion, politics, money, sex, failure, addiction, love, nihilism, your weird
             3am thoughts — all of it. What's not okay is using any of that as a weapon against
             another person.
@@ -62,22 +62,22 @@ export default function Manual() {
           <div className="space-y-3 text-sm">
             <div className="flex gap-3 items-start">
               <span className="text-success mt-0.5 flex-shrink-0">✓</span>
-              <span className="text-white/60">"I think that policy actively harms people" — disagreement</span>
+              <span style={{ color: 'var(--text-secondary)' }}>&quot;I think that policy actively harms people&quot; — disagreement</span>
             </div>
             <div className="flex gap-3 items-start">
               <span className="text-error mt-0.5 flex-shrink-0">✗</span>
-              <span className="text-white/60">"You're an idiot for believing that" — contempt</span>
+              <span style={{ color: 'var(--text-secondary)' }}>&quot;You're an idiot for believing that&quot; — contempt</span>
             </div>
             <div className="flex gap-3 items-start">
               <span className="text-success mt-0.5 flex-shrink-0">✓</span>
-              <span className="text-white/60">"I struggle with this and it makes me pull away" — honesty</span>
+              <span style={{ color: 'var(--text-secondary)' }}>&quot;I struggle with this and it makes me pull away&quot; — honesty</span>
             </div>
             <div className="flex gap-3 items-start">
               <span className="text-error mt-0.5 flex-shrink-0">✗</span>
-              <span className="text-white/60">"You're clearly broken, get help" — attack</span>
+              <span style={{ color: 'var(--text-secondary)' }}>&quot;You're clearly broken, get help&quot; — attack</span>
             </div>
           </div>
-          <p className="text-white/40 text-xs text-center italic">Disagreement is great. Contempt is not.</p>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, textAlign: 'center', fontStyle: 'italic' }}>Disagreement is great. Contempt is not.</p>
         </Section>
 
         {/* Five principles */}
@@ -118,14 +118,14 @@ export default function Manual() {
             ].map((item, i) => (
               <div key={i} className="flex gap-3 items-start text-sm">
                 <span className="text-error/70 mt-0.5 flex-shrink-0">—</span>
-                <span className="text-white/55">{item}</span>
+                <span style={{ color: 'var(--text-secondary)' }}>{item}</span>
               </div>
             ))}
           </div>
-          <div className="bg-white/5 rounded-xl px-4 py-3">
-            <p className="text-white/40 text-xs leading-relaxed">
+          <div className="rounded-xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.03)' }}>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, lineHeight: 1.4 }}>
               Being wrong, controversial, hard to agree with, or holding unpopular opinions is
-              <span className="text-white/70 font-semibold"> not</span> grounds for removal.
+              <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}> not</span> grounds for removal.
               This is a place for honest conversation, not comfortable consensus.
             </p>
           </div>
@@ -133,13 +133,13 @@ export default function Manual() {
 
         {/* Process */}
         <Section title="The process">
-          <div className="space-y-4 text-sm text-white/55 leading-relaxed">
+          <div className="space-y-4 text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
             <p>
               If you're flagged by other users, you'll receive a private review. We look at the full
               picture — not just the complaint, but the pattern, the context, and who's reporting.
             </p>
             <p>
-              If we remove you: you get <span className="text-white font-semibold">one appeal</span>.
+              If we remove you: you get <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>one appeal</span>.
               Write it plainly and honestly. We read every one.
             </p>
             <p>
@@ -150,7 +150,7 @@ export default function Manual() {
 
         {/* Footer */}
         <div className="text-center pt-4 pb-8">
-          <p className="text-white/25 text-xs">unddrground.com · v1</p>
+          <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12 }}>unddrground.com · v1</p>
           <Link to="/" className="text-primary-500 text-sm font-semibold hover:underline mt-3 block">
             Back to Unddr
           </Link>

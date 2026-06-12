@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Message = require('../models/Message');
 const Report = require('../models/Report');
 const InviteApplication = require('../models/InviteApplication');
+const Invite = require('../models/Invite');
 const auth = require('../middleware/auth');
 const adminMiddleware = require('../middleware/admin');
 
@@ -37,6 +38,11 @@ router.get('/stats', async (req, res) => {
       messagesLast24h,
       bannedUsers,
       adminUsers,
+      invitesCreated,
+      invitesUsed,
+      vouchesCreated,
+      usersWithVoucher,
+      paidUsers,
     ] = await Promise.all([
       User.countDocuments(),
       Message.countDocuments({ isDeleted: false }),
@@ -46,8 +52,24 @@ router.get('/stats', async (req, res) => {
       Message.countDocuments({ createdAt: { $gte: new Date(now - 24 * 60 * 60 * 1000) }, isDeleted: false }),
       User.countDocuments({ isBanned: true }),
       User.countDocuments({ isAdmin: true }),
+      Invite.countDocuments(),
+      Invite.countDocuments({ status: 'used' }),
+      Invite.countDocuments({ vouchedBy: { $ne: null } }),
+      User.countDocuments({ vouchedBy: { $ne: null } }),
+      User.countDocuments({ plan: 'paid' }),
     ]);
-    res.json({ totalUsers, totalMessages, onlineUsers, newUsersToday, newUsersWeek, messagesLast24h, bannedUsers, adminUsers });
+
+    const conversionRate = invitesCreated > 0
+      ? Math.round((invitesUsed / invitesCreated) * 100)
+      : 0;
+
+    res.json({
+      totalUsers, totalMessages, onlineUsers,
+      newUsersToday, newUsersWeek, messagesLast24h,
+      bannedUsers, adminUsers,
+      invitesCreated, invitesUsed, vouchesCreated,
+      usersWithVoucher, conversionRate, paidUsers,
+    });
   } catch {
     res.status(500).json({ message: 'Server error' });
   }
@@ -79,6 +101,21 @@ router.put('/users/:id/ban', async (req, res) => {
     if (!target) return res.status(404).json({ message: 'User not found' });
     if (target.isAdmin) return res.status(400).json({ message: 'Cannot ban an admin' });
     target.isBanned = !target.isBanned;
+    await target.save();
+    res.json({ user: target.toPublicJSON() });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// PUT /api/admin/users/:id/plan — set user plan ('free' | 'paid')
+router.put('/users/:id/plan', async (req, res) => {
+  try {
+    const { plan } = req.body;
+    if (!['free', 'paid'].includes(plan)) return res.status(400).json({ message: "plan must be 'free' or 'paid'" });
+    const target = await User.findById(req.params.id);
+    if (!target) return res.status(404).json({ message: 'User not found' });
+    target.plan = plan;
     await target.save();
     res.json({ user: target.toPublicJSON() });
   } catch {

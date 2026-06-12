@@ -84,7 +84,7 @@ export default function IncomingCallModal() {
       <div className="flex flex-col items-center gap-6 px-10 py-10 bg-white/[0.06] border border-white/10 rounded-3xl shadow-2xl shadow-black/60 max-w-xs w-full mx-4">
 
         {/* Call type label */}
-        <div className="flex items-center gap-2 text-white/60 text-sm font-medium">
+        <div className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
           {isVideo ? <VideoIcon /> : <PhoneIcon />}
           <span>Incoming {isVideo ? 'Video' : 'Audio'} Call</span>
         </div>
@@ -105,8 +105,8 @@ export default function IncomingCallModal() {
 
         {/* Name */}
         <div className="text-center">
-          <p className="text-white text-2xl font-bold">{remoteUser.username}</p>
-          <p className="text-white/50 text-sm mt-1">wants to {isVideo ? 'video' : 'voice'} call you</p>
+          <p style={{ color: 'var(--text-primary)', fontSize: 22, fontWeight: 700 }}>{remoteUser.username}</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginTop: 6 }}>wants to {isVideo ? 'video' : 'voice'} call you</p>
         </div>
 
         {/* Action buttons */}
@@ -117,11 +117,11 @@ export default function IncomingCallModal() {
               onClick={rejectCall}
               className="w-16 h-16 bg-red-500 hover:bg-red-600 active:scale-95 rounded-full flex items-center justify-center shadow-lg shadow-red-900/40 transition"
             >
-              <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24" style={{ color: '#fff' }}>
                 <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" />
               </svg>
             </button>
-            <span className="text-white/50 text-xs">Decline</span>
+            <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>Decline</span>
           </div>
 
           {/* Accept */}
@@ -131,17 +131,17 @@ export default function IncomingCallModal() {
               className="w-16 h-16 bg-green-500 hover:bg-green-600 active:scale-95 rounded-full flex items-center justify-center shadow-lg shadow-green-900/40 transition animate-bounce"
             >
               {isVideo ? (
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#fff' }}>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M4 6h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2z" />
                 </svg>
               ) : (
-                <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24" style={{ color: '#fff' }}>
                   <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" />
                 </svg>
               )}
             </button>
-            <span className="text-white/50 text-xs">Accept</span>
+            <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>Accept</span>
           </div>
         </div>
       </div>

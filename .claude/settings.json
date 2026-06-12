@@ -1,7 +1,18 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(Stop-Process -Id 12184 -Force -Confirm:$false)"
+      "PowerShell(Stop-Process -Id 12184 -Force -Confirm:$false)",
+      "PowerShell(cmdkey /list)",
+      "PowerShell(cmdkey /delete:git:https://github.com 2>&1)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Read(//c/Users/unreal/.claude/projects/c--Projects-SecureChat/memory/**)",
+      "Bash(xargs ls -1)",
+      "Bash(xargs wc -l)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\unreal\\.claude\\projects\\c--Projects-SecureChat\\memory"
     ]
   }
 }

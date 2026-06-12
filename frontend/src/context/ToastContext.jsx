@@ -17,7 +17,14 @@ export function ToastProvider({ children }) {
       {children}
       <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
         {toasts.map((t) => (
-          <div key={t.id} className={`px-4 py-2 rounded-lg text-sm shadow-md ${t.type === 'error' ? 'bg-red-600 text-white' : 'bg-white/10 text-white'}`}>
+          <div
+            key={t.id}
+            className="px-4 py-2 rounded-lg text-sm shadow-md"
+            style={{
+              background: t.type === 'error' ? 'rgba(220,38,38,1)' : 'rgba(255,255,255,0.06)',
+              color: t.type === 'error' ? '#fff' : 'var(--text-primary)'
+            }}
+          >
             {t.message}
           </div>
         ))}

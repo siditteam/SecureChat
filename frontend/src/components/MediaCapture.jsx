@@ -62,15 +62,16 @@ export default function MediaCapture({ onSend, onClose }) {
         <div className="flex items-center justify-between px-5 pt-4 pb-3">
           <button
             onClick={onClose}
-            className="text-[#8696a0] hover:text-white p-1.5 rounded-full hover:bg-white/10 transition"
+            className="p-1.5 rounded-full transition"
+            style={{ color: 'var(--text-secondary)' }}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-          <h3 className="text-white font-semibold text-sm">Send Media</h3>
+          <h3 style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: 14 }}>Send Media</h3>
           {file
-            ? <button onClick={reset} className="text-[#8696a0] text-xs hover:text-white transition px-2 py-1">Change</button>
+            ? <button onClick={reset} className="text-xs transition px-2 py-1" style={{ color: 'var(--text-secondary)' }}>Change</button>
             : <div className="w-14" />
           }
         </div>
@@ -95,15 +96,16 @@ export default function MediaCapture({ onSend, onClose }) {
                 </svg>
               </div>
               <div className="text-center">
-                <p className="text-white text-sm font-medium">Drop a photo or video</p>
-                <p className="text-[#8696a0] text-xs mt-1">or tap to browse</p>
-              </div>
+                  <p style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 600 }}>Drop a photo or video</p>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 12, marginTop: 6 }}>or tap to browse</p>
+                </div>
             </div>
 
             {/* Camera button (uses capture on mobile) */}
             <button
               onClick={() => cameraRef.current?.click()}
-              className="w-full flex items-center justify-center gap-2 bg-[#2a3942] hover:bg-[#3a4a52] text-white rounded-xl py-3 text-sm transition"
+              className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm transition"
+              style={{ background: 'rgba(42,57,66,1)', color: 'var(--text-secondary)' }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -124,11 +126,11 @@ export default function MediaCapture({ onSend, onClose }) {
                 <img src={preview} alt="Preview" className="w-full max-h-72 object-contain" />
               )}
               {mediaType === 'video' && (
-                <div className="absolute top-2 left-2 bg-black/60 rounded-full px-2.5 py-1 flex items-center gap-1">
-                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <div className="absolute top-2 left-2 bg-black/60 rounded-full px-2.5 py-1 flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-on-accent, #fff)' }}>
                     <path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z" />
                   </svg>
-                  <span className="text-white text-[10px] font-medium">Video</span>
+                  <span className="text-[10px] font-medium" style={{ color: 'var(--text-on-accent, #fff)' }}>Video</span>
                 </div>
               )}
             </div>
@@ -155,18 +157,16 @@ export default function MediaCapture({ onSend, onClose }) {
                     </svg>
                   )}
                 </div>
-                <div className="text-left">
-                  <p className={`text-sm font-semibold ${viewOnce ? 'text-[#00a884]' : 'text-white'}`}>
-                    View once
-                  </p>
-                  <p className="text-[#8696a0] text-xs">Disappears after opening</p>
+                  <div className="text-left">
+                  <p style={viewOnce ? { color: 'var(--accent)', fontSize: 14, fontWeight: 600 } : { color: 'var(--text-primary)', fontSize: 14, fontWeight: 600 }}>
+                      View once
+                    </p>
+                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Disappears after opening</p>
                 </div>
               </div>
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition ${
-                viewOnce ? 'border-[#00a884] bg-[#00a884]' : 'border-[#8696a0]'
-              }`}>
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition`} style={viewOnce ? { borderColor: 'rgba(0,169,132,0.9)', background: 'rgba(0,169,132,1)' } : { borderColor: 'rgba(134,150,160,1)' }}>
                 {viewOnce && (
-                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#fff' }}>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                   </svg>
                 )}
@@ -177,11 +177,12 @@ export default function MediaCapture({ onSend, onClose }) {
             <button
               onClick={handleSend}
               disabled={sending}
-              className="w-full bg-[#00a884] hover:bg-[#02b397] disabled:opacity-50 text-white font-semibold rounded-xl py-3.5 transition flex items-center justify-center gap-2 text-sm"
+              className="w-full rounded-xl py-3.5 transition flex items-center justify-center gap-2 text-sm"
+              style={{ background: 'var(--accent)', color: 'var(--text-primary)', fontWeight: 700 }}
             >
               {sending ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-transparent border-t-transparent rounded-full animate-spin" style={{ borderColor: 'rgba(255,255,255,0.6)', borderTopColor: 'rgba(255,255,255,1)' }} />
                   Sending…
                 </>
               ) : (

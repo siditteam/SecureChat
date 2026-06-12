@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema({
   inviteTokens:    { type: Number, default: 0 },
   probationEndsAt: { type: Date, default: null },
   invitedBy:       { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  vouchedBy:       { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   accountStatus:   { type: String, enum: ['probation', 'active', 'warned', 'suspended', 'removed', 'appealing'], default: 'probation' },
   // Moderation
   removalReason:      { type: String, default: null },
@@ -43,6 +44,8 @@ const userSchema = new mongoose.Schema({
   blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   // Increments on every login — stale JWTs from other devices become invalid
   loginVersion: { type: Number, default: 0 },
+  // Monetization: 'free' (default) or 'paid'
+  plan: { type: String, enum: ['free', 'paid'], default: 'free' },
 }, { timestamps: true });
 
 userSchema.methods.toPublicJSON = function () {
@@ -62,9 +65,11 @@ userSchema.methods.toPublicJSON = function () {
     inviteTokens: this.inviteTokens,
     probationEndsAt: this.probationEndsAt,
     invitedBy: this.invitedBy,
+    vouchedBy: this.vouchedBy,
     accountStatus: this.accountStatus,
     hasAppealed: this.hasAppealed,
     removalReason: this.removalReason,
+    plan: this.plan,
   };
 };
 

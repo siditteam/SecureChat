@@ -14,28 +14,35 @@ function StatCard({ label, value, sub, color = 'primary' }) {
     red:     'from-red-500 to-red-600',
     indigo:  'from-indigo-500 to-indigo-600',
   };
-  const textColor = color === 'primary' ? 'text-ink-950' : 'text-white';
-  const subTextColor = color === 'primary' ? 'text-ink-950/70' : 'text-white/70';
-  const labelTextColor = color === 'primary' ? 'text-ink-950/80' : 'text-white/80';
+  const wrapperStyle = { color: color === 'primary' ? 'var(--text-ink-950)' : 'var(--text-on-accent)' };
+  const labelStyle = { color: color === 'primary' ? 'var(--text-ink-950/80)' : 'var(--text-on-accent)' };
+  const subStyle = { color: color === 'primary' ? 'var(--text-ink-950/70)' : 'var(--text-on-accent)' };
   return (
-    <div className={`bg-gradient-to-br ${colors[color]} rounded-2xl p-4 ${textColor} shadow-md`}>
-      <p className={`${labelTextColor} text-[11px] font-medium uppercase tracking-wider mb-1.5`}>{label}</p>
+    <div className={`bg-gradient-to-br ${colors[color]} rounded-2xl p-4 shadow-md`} style={wrapperStyle}>
+      <p style={labelStyle} className="text-[11px] font-medium uppercase tracking-wider mb-1.5">{label}</p>
       <p className="text-2xl font-bold">{value ?? '—'}</p>
-      {sub && <p className={`${subTextColor} text-xs mt-0.5`}>{sub}</p>}
+      {sub && <p style={subStyle} className="text-xs mt-0.5">{sub}</p>}
     </div>
   );
 }
 
 function Badge({ children, color = 'gray' }) {
   const map = {
-    gray:   'bg-white/10 text-white/60',
-    red:    'bg-red-500/20 text-red-300',
-    green:  'bg-green-500/20 text-green-300',
-    blue:   'bg-primary-500/20 text-primary-300',
-    yellow: 'bg-yellow-500/20 text-yellow-300',
+    gray:   'bg-white/10',
+    red:    'bg-red-500/20',
+    green:  'bg-green-500/20',
+    blue:   'bg-primary-500/20',
+    yellow: 'bg-yellow-500/20',
+  };
+  const colorMap = {
+    gray: 'var(--text-secondary)',
+    red:  'var(--red-300, #fca5a5)',
+    green:'var(--green-300, #86efac)',
+    blue: 'var(--primary-300, #93c5fd)',
+    yellow:'var(--yellow-300, #facc15)',
   };
   return (
-    <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${map[color]}`}>
+    <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${map[color]}`} style={{ color: colorMap[color] || 'var(--text-secondary)' }}>
       {children}
     </span>
   );
@@ -44,13 +51,19 @@ function Badge({ children, color = 'gray' }) {
 function ActionBtn({ onClick, variant = 'default', children, disabled }) {
   const base = 'text-xs font-semibold px-3 py-1.5 rounded-lg transition disabled:opacity-40';
   const variants = {
-    default: `${base} bg-white/10 text-white/70 hover:bg-white/20`,
-    danger:  `${base} bg-red-500/10 text-red-400 hover:bg-red-500/20`,
-    primary: `${base} bg-primary-500/10 text-primary-400 hover:bg-primary-500/20`,
-    warn:    `${base} bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20`,
+    default: `${base} bg-white/10 hover:bg-white/20`,
+    danger:  `${base} bg-red-500/10 hover:bg-red-500/20`,
+    primary: `${base} bg-primary-500/10 hover:bg-primary-500/20`,
+    warn:    `${base} bg-yellow-500/10 hover:bg-yellow-500/20`,
+  };
+  const textColorMap = {
+    default: 'var(--text-secondary)',
+    danger:  'var(--text-error, #ef4444)',
+    primary: 'var(--text-on-accent, #fff)',
+    warn:    'var(--yellow-300, #facc15)'
   };
   return (
-    <button onClick={onClick} disabled={disabled} className={variants[variant]}>
+    <button onClick={onClick} disabled={disabled} className={variants[variant]} style={{ color: textColorMap[variant] }}>
       {children}
     </button>
   );
@@ -60,11 +73,11 @@ function ConfirmModal({ message, onConfirm, onCancel }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
       <div className="bg-ink-800 border border-white/10 rounded-2xl shadow-xl p-6 max-w-sm w-full">
-        <p className="text-white font-semibold mb-2">Are you sure?</p>
-        <p className="text-white/50 text-sm mb-5">{message}</p>
+        <p style={{ color: 'var(--text-primary)' }} className="font-semibold mb-2">Are you sure?</p>
+        <p style={{ color: 'var(--text-secondary)' }} className="text-sm mb-5">{message}</p>
         <div className="flex gap-3">
-          <button onClick={onCancel} className="flex-1 border border-white/10 text-white/70 py-2 rounded-xl text-sm font-medium hover:bg-white/5 transition">Cancel</button>
-          <button onClick={onConfirm} className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded-xl text-sm font-medium transition">Delete</button>
+          <button onClick={onCancel} className="flex-1 border border-white/10 py-2 rounded-xl text-sm font-medium hover:bg-white/5 transition" style={{ color: 'var(--text-secondary)' }}>Cancel</button>
+          <button onClick={onConfirm} className="flex-1 bg-red-500 hover:bg-red-600 py-2 rounded-xl text-sm font-medium transition" style={{ color: 'var(--text-on-accent, #fff)' }}>Delete</button>
         </div>
       </div>
     </div>
@@ -80,19 +93,20 @@ function AccessDenied({ onClaim, claiming, claimError, onBack }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         </div>
-        <h2 className="text-xl font-bold text-white mb-2">Admin Access Required</h2>
-        <p className="text-white/50 text-sm mb-6">
+        <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Admin Access Required</h2>
+        <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
           You don't have admin privileges. If no admins exist yet, you can claim the first admin role below.
         </p>
         {claimError && <p className="text-red-400 text-sm mb-3">{claimError}</p>}
         <button
           onClick={onClaim}
           disabled={claiming}
-          className="w-full bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl font-semibold transition mb-3 disabled:opacity-60 border border-white/10"
+          className="w-full bg-white/10 hover:bg-white/20 py-3 rounded-xl font-semibold transition mb-3 disabled:opacity-60 border border-white/10"
+          style={{ color: 'var(--text-on-accent, #fff)' }}
         >
           {claiming ? 'Claiming…' : 'Claim First Admin'}
         </button>
-        <button onClick={onBack} className="w-full text-sm text-white/40 hover:text-white py-2 transition">
+        <button onClick={onBack} className="w-full text-sm py-2 transition" style={{ color: 'var(--text-secondary)' }}>
           Go back to chats
         </button>
       </div>
@@ -298,7 +312,7 @@ export default function Admin() {
     <div className="h-screen bg-ink-900 flex flex-col overflow-hidden">
 
       {/* Header */}
-      <div className="bg-ink-900 border-b-2 border-primary-500/50 text-white shadow-lg flex-shrink-0">
+      <div className="bg-ink-900 border-b-2 border-primary-500/50 shadow-lg flex-shrink-0" style={{ color: 'var(--text-primary)' }}>
         <div className="max-w-6xl mx-auto flex items-center gap-3 px-4 py-4">
           <button
             onClick={() => navigate('/')}
@@ -321,13 +335,13 @@ export default function Admin() {
             <svg className="w-5 h-5 text-primary-200 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 1l3.09 6.26L22 8.27l-5 4.87 1.18 6.88L12 16.77l-6.18 3.25L7 13.14 2 8.27l6.91-1.01L12 1z" />
             </svg>
-            <h1 className="text-lg font-bold tracking-tight truncate">
+            <h1 className="text-lg font-bold tracking-tight truncate" style={{ color: 'var(--text-primary)' }}>
               <span className="md:hidden">{mobileShowContent ? currentNavItem?.label : 'Admin Panel'}</span>
               <span className="hidden md:inline">Admin Panel</span>
             </h1>
           </div>
 
-          <span className="text-xs bg-white/15 px-3 py-1 rounded-full whitespace-nowrap">
+          <span className="text-xs bg-white/15 px-3 py-1 rounded-full whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>
             @{user?.username}
           </span>
         </div>
@@ -342,16 +356,15 @@ export default function Admin() {
               key={item.id}
               onClick={() => handleNavClick(item.id)}
               className={`w-full flex items-center gap-3 px-5 py-4 md:px-4 md:py-3 text-sm font-medium transition border-b border-white/[0.06] ${
-                section === item.id
-                  ? 'text-white md:bg-primary-500/20 md:text-primary-200'
-                  : 'text-white/60 hover:bg-white/5 hover:text-white'
+                section === item.id ? 'md:bg-primary-500/20 md:text-primary-200' : 'hover:bg-white/5'
               }`}
+              style={{ color: section === item.id ? 'var(--text-primary)' : 'var(--text-secondary)' }}
             >
               <svg className="w-5 h-5 md:w-4 md:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
               </svg>
               <span className="flex-1 text-left">{item.label}</span>
-              <svg className="w-4 h-4 text-white/20 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-secondary)' }}>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
@@ -365,10 +378,10 @@ export default function Admin() {
             {/* ── Dashboard ── */}
             {section === 'dashboard' && (
               <div className="space-y-5">
-                <h2 className="text-xl font-bold text-white hidden md:block">Dashboard</h2>
+                <h2 className="text-xl font-bold hidden md:block" style={{ color: 'var(--text-primary)' }}>Dashboard</h2>
 
                 {statsLoading && !stats && (
-                  <div className="flex items-center gap-2 text-white/40 text-sm">
+                  <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                     <span className="w-4 h-4 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
                     Loading stats…
                   </div>
@@ -388,9 +401,15 @@ export default function Admin() {
                       <StatCard label="Banned"        value={stats.bannedUsers}   color="red" />
                       <StatCard label="Admins"        value={stats.adminUsers}    color="indigo" />
                     </div>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      <StatCard label="Invites Created"   value={stats.invitesCreated}   color="indigo" />
+                      <StatCard label="Invites Used"      value={stats.invitesUsed}       sub={`${stats.conversionRate ?? 0}% conversion`} color="green" />
+                      <StatCard label="Vouches Given"     value={stats.vouchesCreated}   color="orange" />
+                      <StatCard label="Vouched Users"     value={stats.usersWithVoucher} sub="have a voucher" color="purple" />
+                    </div>
 
                     <div className="bg-white/[0.05] backdrop-blur-xl rounded-2xl border border-white/10 p-5">
-                      <h3 className="font-semibold text-white mb-4 text-sm uppercase tracking-wide">Quick actions</h3>
+                      <h3 className="font-semibold mb-4 text-sm uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>Quick actions</h3>
                       <div className="flex gap-3 flex-wrap">
                         <button
                           onClick={() => handleNavClick('users')}
@@ -403,7 +422,8 @@ export default function Admin() {
                         </button>
                         <button
                           onClick={refreshStats}
-                          className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white/70 rounded-xl text-sm font-medium hover:bg-white/20 transition"
+                          className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-xl text-sm font-medium hover:bg-white/20 transition"
+                          style={{ color: 'var(--text-secondary)' }}
                         >
                           <svg className={`w-4 h-4 ${statsLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -421,14 +441,14 @@ export default function Admin() {
             {section === 'users' && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-white hidden md:block">
+                  <h2 className="text-xl font-bold hidden md:block" style={{ color: 'var(--text-primary)' }}>
                     Users
-                    {usersTotal > 0 && <span className="ml-2 text-sm font-normal text-white/40">({usersTotal} total)</span>}
+                    {usersTotal > 0 && <span className="ml-2 text-sm font-normal" style={{ color: 'var(--text-secondary)' }}>({usersTotal} total)</span>}
                   </h2>
                 </div>
 
                 <div className="relative">
-                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-secondary)' }}>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                   <input
@@ -436,17 +456,18 @@ export default function Admin() {
                     value={usersQuery}
                     onChange={(e) => { setUsersQuery(e.target.value); setUsersPage(1); }}
                     placeholder="Search by username…"
-                    className="w-full bg-white/10 border border-white/10 text-white rounded-xl pl-9 pr-3 py-2.5 text-sm outline-none placeholder-white/30 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 transition"
+                    className="w-full bg-white/10 border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-sm outline-none placeholder-white/30 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 transition"
+                    style={{ color: 'var(--text-primary)' }}
                   />
                 </div>
 
                 {/* Mobile: card list */}
                 <div className="md:hidden space-y-3">
                   {usersLoading && (
-                    <p className="text-center py-8 text-white/40 text-sm">Loading…</p>
+                    <p className="text-center py-8 text-sm" style={{ color: 'var(--text-secondary)' }}>Loading…</p>
                   )}
                   {!usersLoading && users.length === 0 && (
-                    <p className="text-center py-8 text-white/40 text-sm">No users found</p>
+                    <p className="text-center py-8 text-sm" style={{ color: 'var(--text-secondary)' }}>No users found</p>
                   )}
                   {users.map((u) => (
                     <div key={u._id} className={`bg-white/[0.05] backdrop-blur-xl rounded-2xl border border-white/10 p-4 shadow-sm ${u.isBanned ? 'opacity-60' : ''}`}>
@@ -455,8 +476,8 @@ export default function Admin() {
                           {u.username?.[0]?.toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-white truncate">{u.username}</p>
-                          <p className="text-xs text-white/40">{u.phone}</p>
+                          <p className="font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{u.username}</p>
+                          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{u.phone}</p>
                         </div>
                         <div className="flex flex-col gap-1 items-end">
                           {u.isAdmin  && <Badge color="blue">Admin</Badge>}
@@ -477,7 +498,7 @@ export default function Admin() {
                           </ActionBtn>
                         </div>
                       ) : (
-                        <span className="text-xs text-white/30">You</span>
+                        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>You</span>
                       )}
                     </div>
                   ))}
@@ -488,19 +509,19 @@ export default function Admin() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-white/[0.04] border-b border-white/10">
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-white/40 uppercase tracking-wide">User</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-white/40 uppercase tracking-wide">Phone</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-white/40 uppercase tracking-wide hidden lg:table-cell">Joined</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-white/40 uppercase tracking-wide">Status</th>
-                        <th className="text-right px-4 py-3 text-xs font-semibold text-white/40 uppercase tracking-wide">Actions</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>User</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>Phone</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide hidden lg:table-cell" style={{ color: 'var(--text-secondary)' }}>Joined</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>Status</th>
+                        <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/[0.04]">
                       {usersLoading && (
-                        <tr><td colSpan={5} className="text-center py-10 text-white/40 text-sm">Loading…</td></tr>
+                        <tr><td colSpan={5} className="text-center py-10 text-sm" style={{ color: 'var(--text-secondary)' }}>Loading…</td></tr>
                       )}
                       {!usersLoading && users.length === 0 && (
-                        <tr><td colSpan={5} className="text-center py-10 text-white/40 text-sm">No users found</td></tr>
+                        <tr><td colSpan={5} className="text-center py-10 text-sm" style={{ color: 'var(--text-secondary)' }}>No users found</td></tr>
                       )}
                       {users.map((u) => (
                         <tr key={u._id} className={`hover:bg-white/[0.04] transition ${u.isBanned ? 'opacity-60' : ''}`}>
@@ -510,7 +531,7 @@ export default function Admin() {
                                 {u.username?.[0]?.toUpperCase()}
                               </div>
                               <div>
-                                <p className="font-semibold text-white">{u.username}</p>
+                                <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{u.username}</p>
                                 <div className="flex gap-1 mt-0.5">
                                   {u.isAdmin  && <Badge color="blue">Admin</Badge>}
                                   {u.isBanned && <Badge color="red">Banned</Badge>}
@@ -518,13 +539,13 @@ export default function Admin() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-white/40">{u.phone}</td>
-                          <td className="px-4 py-3 text-white/40 hidden lg:table-cell">
+                          <td className="px-4 py-3" style={{ color: 'var(--text-secondary)' }}>{u.phone}</td>
+                          <td className="px-4 py-3 hidden lg:table-cell" style={{ color: 'var(--text-secondary)' }}>
                             {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}
                           </td>
                           <td className="px-4 py-3">
                             <span className={`w-2 h-2 rounded-full inline-block mr-1.5 ${u.isOnline ? 'bg-green-500' : 'bg-white/20'}`} />
-                            <span className="text-xs text-white/40">{u.isOnline ? 'Online' : 'Offline'}</span>
+                            <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{u.isOnline ? 'Online' : 'Offline'}</span>
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center justify-end gap-1.5">
@@ -541,7 +562,7 @@ export default function Admin() {
                                   </ActionBtn>
                                 </>
                               ) : (
-                                <span className="text-xs text-white/30 pr-2">You</span>
+                                <span className="text-xs pr-2" style={{ color: 'var(--text-secondary)' }}>You</span>
                               )}
                             </div>
                           </td>
@@ -553,19 +574,21 @@ export default function Admin() {
 
                 {usersPages > 1 && (
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-white/40">Page {usersPage} of {usersPages}</p>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Page {usersPage} of {usersPages}</p>
                     <div className="flex gap-2">
                       <button
                         disabled={usersPage <= 1}
                         onClick={() => setUsersPage((p) => p - 1)}
-                        className="px-4 py-2 text-sm bg-white/10 border border-white/10 text-white rounded-xl hover:bg-white/20 transition disabled:opacity-40"
+                        className="px-4 py-2 text-sm bg-white/10 border border-white/10 rounded-xl hover:bg-white/20 transition disabled:opacity-40"
+                        style={{ color: 'var(--text-secondary)' }}
                       >
                         Previous
                       </button>
                       <button
                         disabled={usersPage >= usersPages}
                         onClick={() => setUsersPage((p) => p + 1)}
-                        className="px-4 py-2 text-sm bg-white/10 border border-white/10 text-white rounded-xl hover:bg-white/20 transition disabled:opacity-40"
+                        className="px-4 py-2 text-sm bg-white/10 border border-white/10 rounded-xl hover:bg-white/20 transition disabled:opacity-40"
+                        style={{ color: 'var(--text-secondary)' }}
                       >
                         Next
                       </button>
@@ -578,38 +601,38 @@ export default function Admin() {
             {/* ── System ── */}
             {section === 'system' && (
               <div className="max-w-lg space-y-5">
-                <h2 className="text-xl font-bold text-white hidden md:block">System</h2>
+                <h2 className="text-xl font-bold hidden md:block" style={{ color: 'var(--text-primary)' }}>System</h2>
 
                 <div className="bg-white/[0.05] backdrop-blur-xl rounded-2xl border border-white/10 divide-y divide-white/10 shadow-sm">
                   <div className="px-5 py-4 flex justify-between items-center">
-                    <span className="text-sm text-white/60 font-medium">API Status</span>
+                    <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>API Status</span>
                     <span className="flex items-center gap-1.5 text-sm text-green-400 font-semibold">
                       <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" /> Operational
                     </span>
                   </div>
                   <div className="px-5 py-4 flex justify-between items-center">
-                    <span className="text-sm text-white/60 font-medium">Database</span>
+                    <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Database</span>
                     <span className="flex items-center gap-1.5 text-sm text-green-400 font-semibold">
                       <span className="w-2 h-2 bg-green-500 rounded-full" /> Connected
                     </span>
                   </div>
                   <div className="px-5 py-4 flex justify-between items-center">
-                    <span className="text-sm text-white/60 font-medium">WebSocket</span>
+                    <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>WebSocket</span>
                     <span className="flex items-center gap-1.5 text-sm text-green-400 font-semibold">
                       <span className="w-2 h-2 bg-green-500 rounded-full" /> Active
                     </span>
                   </div>
                   <div className="px-5 py-4 flex justify-between items-center">
-                    <span className="text-sm text-white/60 font-medium">Encryption</span>
+                    <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Encryption</span>
                     <span className="text-sm text-primary-300 font-semibold">RSA-OAEP + AES-GCM</span>
                   </div>
                   <div className="px-5 py-4 flex justify-between items-center">
-                    <span className="text-sm text-white/60 font-medium">Message cleanup</span>
-                    <span className="text-sm text-white/40">Every 60 seconds</span>
+                    <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Message cleanup</span>
+                    <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Every 60 seconds</span>
                   </div>
                   <div className="px-5 py-4 flex justify-between items-center">
-                    <span className="text-sm text-white/60 font-medium">Media storage</span>
-                    <span className="text-sm text-white/40">Local / uploads/</span>
+                    <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Media storage</span>
+                    <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Local / uploads/</span>
                   </div>
                 </div>
 
@@ -626,27 +649,27 @@ export default function Admin() {
             {section === 'reports' && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-white hidden md:block">Reports</h2>
+                  <h2 className="text-xl font-bold hidden md:block" style={{ color: 'var(--text-primary)' }}>Reports</h2>
                   <ActionBtn onClick={loadReports} variant="default">Refresh</ActionBtn>
                 </div>
-                {reportsLoading && <p className="text-white/40 text-sm py-4">Loading…</p>}
+                {reportsLoading && <p className="text-sm py-4" style={{ color: 'var(--text-secondary)' }}>Loading…</p>}
                 {!reportsLoading && reports.length === 0 && (
                   <div className="bg-white/[0.03] border border-white/8 rounded-xl p-6 text-center">
-                    <p className="text-white/40 text-sm">No pending reports. All clear.</p>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>No pending reports. All clear.</p>
                   </div>
                 )}
                 {reports.map((r) => (
                   <div key={r._id} className="bg-white/[0.03] border border-white/8 rounded-xl p-4 space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-white font-semibold text-sm">
+                        <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
                           @{r.reporter?.username} → @{r.reported?.username}
                         </p>
-                        <p className="text-white/50 text-xs mt-0.5">
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
                           {r.reason.replace('_', ' ')} · {new Date(r.createdAt).toLocaleDateString()}
                         </p>
                         {r.description && (
-                          <p className="text-white/60 text-xs mt-2 bg-white/5 rounded-lg px-3 py-2 leading-relaxed">
+                          <p className="text-xs mt-2 bg-white/5 rounded-lg px-3 py-2 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                             "{r.description}"
                           </p>
                         )}
@@ -675,27 +698,27 @@ export default function Admin() {
             {section === 'appeals' && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-white hidden md:block">Appeals</h2>
+                  <h2 className="text-xl font-bold hidden md:block" style={{ color: 'var(--text-primary)' }}>Appeals</h2>
                   <ActionBtn onClick={loadAppeals} variant="default">Refresh</ActionBtn>
                 </div>
-                {appealsLoading && <p className="text-white/40 text-sm py-4">Loading…</p>}
+                {appealsLoading && <p className="text-sm py-4" style={{ color: 'var(--text-secondary)' }}>Loading…</p>}
                 {!appealsLoading && appeals.length === 0 && (
                   <div className="bg-white/[0.03] border border-white/8 rounded-xl p-6 text-center">
-                    <p className="text-white/40 text-sm">No pending appeals.</p>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>No pending appeals.</p>
                   </div>
                 )}
                 {appeals.map((u) => (
                   <div key={u._id} className="bg-white/[0.03] border border-white/8 rounded-xl p-4 space-y-3">
                     <div>
-                      <p className="text-white font-semibold text-sm">@{u.username}</p>
-                      <p className="text-white/40 text-xs mt-0.5">
+                        <p style={{ color: 'var(--text-primary)' }} className="font-semibold text-sm">@{u.username}</p>
+                        <p style={{ color: 'var(--text-secondary)' }} className="text-xs mt-0.5">
                         Removed for: {u.removalReason || 'Not specified'} ·
                         Appeal filed {u.appealSubmittedAt ? new Date(u.appealSubmittedAt).toLocaleDateString() : ''}
                       </p>
                       {u.appealMessage && (
                         <div className="mt-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2.5">
-                          <p className="text-white/25 text-[10px] uppercase tracking-wide mb-1">Their appeal</p>
-                          <p className="text-white/70 text-sm leading-relaxed">"{u.appealMessage}"</p>
+                          <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--text-secondary)' }}>Their appeal</p>
+                          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>&quot;{u.appealMessage}&quot;</p>
                         </div>
                       )}
                     </div>
@@ -712,33 +735,33 @@ export default function Admin() {
             {section === 'applications' && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-white hidden md:block">
+                  <h2 className="text-xl font-bold hidden md:block" style={{ color: 'var(--text-primary)' }}>
                     Invite Applications
-                    {applications.length > 0 && <span className="ml-2 text-sm font-normal text-white/40">({applications.length} pending)</span>}
+                    {applications.length > 0 && <span className="ml-2 text-sm font-normal" style={{ color: 'var(--text-secondary)' }}>({applications.length} pending)</span>}
                   </h2>
                   <ActionBtn onClick={loadApplications} variant="default">Refresh</ActionBtn>
                 </div>
-                {applicationsLoading && <p className="text-white/40 text-sm py-4">Loading…</p>}
+                {applicationsLoading && <p className="text-sm py-4" style={{ color: 'var(--text-secondary)' }}>Loading…</p>}
                 {!applicationsLoading && applications.length === 0 && (
                   <div className="bg-white/[0.03] border border-white/8 rounded-xl p-6 text-center">
-                    <p className="text-white/40 text-sm">No pending applications.</p>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>No pending applications.</p>
                   </div>
                 )}
                 {applications.map((a) => (
                   <div key={a._id} className="bg-white/[0.03] border border-white/8 rounded-xl p-4 space-y-3">
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div className="space-y-0.5">
-                        <p className="text-white font-semibold text-sm">{a.name}</p>
-                        <p className="text-white/50 text-xs">{a.email} · {a.phone}</p>
+                        <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{a.name}</p>
+                        <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{a.email} · {a.phone}</p>
                         <p className="text-primary-300 text-xs font-medium">
                           {a.platform}: {a.social}
                         </p>
                         {a.why && (
-                          <div className="mt-2 bg-white/5 rounded-lg px-3 py-2 text-white/60 text-xs leading-relaxed">
+                          <div className="mt-2 bg-white/5 rounded-lg px-3 py-2 text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                             "{a.why}"
                           </div>
                         )}
-                        <p className="text-white/25 text-[10px] pt-1">
+                        <p className="text-[10px] pt-1" style={{ color: 'var(--text-secondary)' }}>
                           {new Date(a.createdAt).toLocaleDateString()}
                         </p>
                       </div>
@@ -756,21 +779,21 @@ export default function Admin() {
             {/* ── Blocked ── */}
             {section === 'blocked' && (
               <div className="space-y-4">
-                <h2 className="text-xl font-bold text-white hidden md:block">Blocked Users</h2>
-                <p className="text-white/60 text-sm">View users who have blocked others. You can remove blocks here.</p>
+                <h2 className="text-xl font-bold hidden md:block" style={{ color: 'var(--text-primary)' }}>Blocked Users</h2>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>View users who have blocked others. You can remove blocks here.</p>
                 <div className="space-y-3">
                   {blockedList.length === 0 && (
-                    <p className="text-white/40 py-6">No blocked relationships found.</p>
+                    <p className="py-6" style={{ color: 'var(--text-secondary)' }}>No blocked relationships found.</p>
                   )}
                   {blockedList.map((u) => (
                     <div key={u._id} className="bg-white/[0.03] border border-white/8 rounded-xl p-3 flex items-start justify-between">
                       <div>
-                        <p className="font-semibold text-white">{u.username}</p>
-                        <p className="text-white/60 text-sm">Blocked {u.blocked.length} user(s)</p>
+                        <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{u.username}</p>
+                        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Blocked {u.blocked.length} user(s)</p>
                         <div className="mt-2 flex gap-2 flex-wrap">
                           {u.blocked.map((b) => (
-                            <div key={b._id} className="bg-white/5 px-2 py-1 rounded-full text-sm flex items-center gap-2">
-                              <span className="font-medium text-white/90">{b.username}</span>
+                              <div key={b._id} className="bg-white/5 px-2 py-1 rounded-full text-sm flex items-center gap-2">
+                              <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{b.username}</span>
                               <button onClick={() => unblock(u._id, b._id)} className="text-xs text-red-400 hover:underline">Unblock</button>
                             </div>
                           ))}
@@ -797,20 +820,21 @@ export default function Admin() {
       {removeTarget && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
           <div className="bg-ink-800 border border-white/10 rounded-2xl shadow-xl p-6 max-w-sm w-full space-y-4">
-            <p className="text-white font-semibold">Remove @{removeTarget.reported?.username}?</p>
-            <p className="text-white/40 text-sm">They will be banned and notified. They can appeal once.</p>
+            <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>Remove @{removeTarget.reported?.username}?</p>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>They will be banned and notified. They can appeal once.</p>
             <div>
-              <label className="text-white/60 text-xs font-semibold uppercase tracking-wide block mb-1.5">Reason (shown to user)</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: 'var(--text-secondary)' }}>Reason (shown to user)</label>
               <textarea
                 value={removeReason}
                 onChange={(e) => setRemoveReason(e.target.value)}
                 rows={3}
                 placeholder="e.g. Repeated hostile behaviour toward other members"
-                className="w-full bg-ink-900 border border-white/10 text-white rounded-xl px-3 py-2.5 text-sm outline-none resize-none placeholder-white/25 focus:border-primary-500"
+                className="w-full bg-ink-900 border border-white/10 rounded-xl px-3 py-2.5 text-sm outline-none resize-none placeholder-secondary focus:border-primary-500"
+                style={{ color: 'var(--text-primary)' }}
               />
             </div>
             <div className="flex gap-3">
-              <button onClick={() => { setRemoveTarget(null); setRemoveReason(''); }} className="flex-1 border border-white/10 text-white/70 py-2.5 rounded-xl text-sm font-medium hover:bg-white/5 transition">Cancel</button>
+              <button onClick={() => { setRemoveTarget(null); setRemoveReason(''); }} className="flex-1 border border-white/10 py-2.5 rounded-xl text-sm font-medium hover:bg-white/5 transition" style={{ color: 'var(--text-secondary)' }}>Cancel</button>
               <button
                 onClick={async () => {
                   await reviewReport(removeTarget._id, 'remove', { reason: removeReason });
