@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import TaglineBanner from '../components/assets/TaglineBanner.jsx';
 
 // ── Design tokens (use CSS variables for theming) ─────────────────────────────
@@ -1037,11 +1037,82 @@ function ApplySection() {
   );
 }
 
+// ── Invite code entry modal ────────────────────────────────────────────────────
+function InviteModal({ onClose }) {
+  const navigate = useNavigate();
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+
+  const go = (e) => {
+    e.preventDefault();
+    const trimmed = code.trim();
+    if (!trimmed) { setError('Paste or type your invite code.'); return; }
+    // Handles full URL (e.g. https://unddrground.com/invite/abc123) or bare code
+    const match = trimmed.match(/\/invite\/([^/?#]+)/);
+    const resolved = match ? match[1] : trimmed;
+    navigate(`/invite/${encodeURIComponent(resolved)}`);
+    onClose();
+  };
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(15,23,36,0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--card-border)', borderRadius: 20, padding: '36px 32px', width: '100%', maxWidth: 400, boxShadow: '0 16px 64px rgba(15,23,36,0.18)', fontFamily: F }}>
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(10,163,163,0.08)', border: '1.5px solid rgba(10,163,163,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <span style={{ fontWeight: 800, fontSize: 20, color: ACCENT, fontFamily: F }}>U</span>
+          </div>
+          <h2 style={{ fontWeight: 700, fontSize: 22, letterSpacing: '-0.02em', color: T.primary, margin: '0 0 8px' }}>Enter your invite</h2>
+          <p style={{ fontSize: 14, color: T.secondary, lineHeight: 1.6, margin: 0 }}>
+            Paste the invite link or code you received from a member.
+          </p>
+        </div>
+
+        <form onSubmit={go} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <input
+            autoFocus
+            value={code}
+            onChange={(e) => { setCode(e.target.value); setError(''); }}
+            placeholder="Paste invite link or code"
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              background: 'var(--bg-muted)', border: `1.5px solid ${error ? 'rgba(239,68,68,0.4)' : 'var(--card-border)'}`,
+              borderRadius: 12, padding: '12px 14px', fontSize: 14,
+              color: T.primary, outline: 'none', fontFamily: F,
+              transition: 'border-color 0.15s',
+            }}
+            onFocus={(e) => { if (!error) e.target.style.borderColor = ACCENT; }}
+            onBlur={(e) => { e.target.style.borderColor = error ? 'rgba(239,68,68,0.4)' : 'var(--card-border)'; }}
+          />
+          {error && <p style={{ fontSize: 12, color: 'rgba(220,38,38,0.85)', margin: 0 }}>{error}</p>}
+          <button
+            type="submit"
+            style={{ width: '100%', background: ACCENT, color: '#fff', fontFamily: F, fontWeight: 700, fontSize: 15, padding: '13px 0', borderRadius: 12, border: 'none', cursor: 'pointer', transition: 'opacity 0.15s' }}
+          >
+            Continue →
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{ width: '100%', background: 'transparent', border: 'none', color: T.secondary, fontSize: 13, fontFamily: F, cursor: 'pointer', padding: '6px 0' }}
+          >
+            Cancel
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ── 11. Final CTA ──────────────────────────────────────────────────────────────
 function FinalCTA() {
   const mobile = useIsMobile();
+  const [showInviteModal, setShowInviteModal] = useState(false);
   return (
     <section style={{ background: BG.deep, position: 'relative', overflow: 'hidden' }}>
+      {showInviteModal && <InviteModal onClose={() => setShowInviteModal(false)} />}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse 60% 58% at 50% 62%, rgba(10,163,163,0.06) 0%, transparent 64%)' }} />
       <SectionDivider />
       <div style={{ maxWidth: 740, margin: '0 auto', padding: mobile ? '72px 20px' : '128px 24px', textAlign: 'center', position: 'relative' }}>
@@ -1055,16 +1126,18 @@ function FinalCTA() {
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
-              <Link to="/login" style={{
-                fontFamily: F, fontWeight: 700, fontSize: 15,
-                background: ACCENT, color: '#ffffff',
-                padding: '14px 36px', borderRadius: 99, textDecoration: 'none', transition: 'all 0.2s',
-              }}
+              <button
+                onClick={() => setShowInviteModal(true)}
+                style={{
+                  fontFamily: F, fontWeight: 700, fontSize: 15,
+                  background: ACCENT, color: '#ffffff',
+                  padding: '14px 36px', borderRadius: 99, border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+                }}
                 onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-strong)'}
                 onMouseLeave={e => e.currentTarget.style.background = ACCENT}
               >
                 I have an invite →
-              </Link>
+              </button>
               <Link to="/apply" style={{
                 fontFamily: F, fontWeight: 600, fontSize: 15,
                 border: `1px solid ${BORDER.soft}`, color: T.secondary,
