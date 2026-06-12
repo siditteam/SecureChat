@@ -413,66 +413,41 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
       <div className="w-full md:w-[320px] flex-shrink-0 flex flex-col shadow-sm" style={{ background: 'var(--bg-surface)', borderRight: '1px solid var(--card-border)' }}>
 
         {/* Header */}
-        <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--card-border)', color: 'var(--text-primary)' }}>
-          <div className="flex items-center gap-3 px-4 py-4">
-            <button onClick={() => navigate('/settings')} title="Settings" className="flex-shrink-0">
-              <Avatar name={user?.username} online={connected} size="sm" avatarFile={user?.avatar} />
-            </button>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <p className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>{user?.username}</p>
-                {user?.isAdmin && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide flex-shrink-0" style={{ background: 'rgba(10,163,163,0.12)', color: 'var(--accent)' }}>
-                    Admin
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full" style={{ background: connected ? '#10b981' : 'rgba(15,23,36,0.25)' }} />
-                <span className="text-xs" style={{ color: 'var(--text-secondary)', opacity: 0.8 }}>{connected ? 'Online' : 'Reconnecting…'}</span>
-              </div>
+        <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--card-border)' }}>
+          <div className="flex items-center justify-between px-4 py-3">
+            {/* Brand */}
+            <div className="flex items-center gap-2">
+              <img src="/assets/logo-unddr-teal-icon.svg" alt="Unddr" style={{ width: 28, height: 28, borderRadius: 6 }} />
+              <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--accent)', letterSpacing: '-0.02em', fontFamily: "'Space Grotesk', sans-serif" }}>UNDDR</span>
+              {user?.isAdmin && (
+                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 999, background: 'rgba(10,163,163,0.12)', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  Admin
+                </span>
+              )}
             </div>
+
+            {/* Actions */}
             <div className="flex items-center gap-0.5">
-              <button
-                onClick={() => setShowQR(true)}
-                title="My invite QR"
-                className="p-2 rounded-lg transition duration-150"
-                style={{ color: 'var(--text-secondary)' }}
-              >
+              <button onClick={() => setShowQR(true)} title="My invite QR" className="p-2 rounded-lg transition duration-150" style={{ color: 'var(--text-secondary)' }}>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                 </svg>
               </button>
-              <button
-                onClick={() => navigate('/settings')}
-                title="Settings"
-                className="p-2 rounded-lg transition duration-150"
-                style={{ color: 'var(--text-secondary)' }}
-              >
+              <button onClick={() => navigate('/settings')} title="Settings" className="p-2 rounded-lg transition duration-150" style={{ color: 'var(--text-secondary)' }}>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </button>
               {user?.isAdmin && (
-                <button
-                  onClick={() => navigate('/admin')}
-                  title="Admin panel"
-                  className="p-2 rounded-lg transition duration-150"
-                  style={{ color: 'var(--accent)' }}
-                >
+                <button onClick={() => navigate('/admin')} title="Admin panel" className="p-2 rounded-lg transition duration-150" style={{ color: 'var(--accent)' }}>
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 1l3.09 6.26L22 8.27l-5 4.87 1.18 6.88L12 16.77l-6.18 3.25L7 13.14 2 8.27l6.91-1.01L12 1z" />
                   </svg>
                 </button>
               )}
-              <button
-                onClick={logout}
-                title="Log out"
-                className="p-2 rounded-lg transition duration-150"
-                style={{ color: 'var(--text-secondary)' }}
-              >
+              <button onClick={logout} title="Log out" className="p-2 rounded-lg transition duration-150" style={{ color: 'var(--text-secondary)' }}>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -480,6 +455,13 @@ export default function Sidebar({ selectedUser, onSelectUser }) {
               </button>
             </div>
           </div>
+          {/* Disconnected indicator */}
+          {!connected && (
+            <div style={{ background: 'rgba(239,68,68,0.06)', borderTop: '1px solid rgba(239,68,68,0.12)', padding: '4px 16px', fontSize: 11, color: 'rgba(220,38,38,0.75)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(220,38,38,0.6)', display: 'inline-block' }} />
+              Reconnecting…
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
