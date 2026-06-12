@@ -444,8 +444,8 @@ export default function Sidebar({ selectedUser, onSelectUser, initialChatUserId,
     <>
       <div className="w-full md:w-[320px] flex-shrink-0 flex flex-col shadow-sm" style={{ background: 'var(--bg-surface)', borderRight: '1px solid var(--card-border)' }}>
 
-        {/* Header */}
-        <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--card-border)' }}>
+        {/* Header — paddingTop pushes content below Dynamic Island / notch */}
+        <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--card-border)', paddingTop: 'env(safe-area-inset-top)' }}>
           <div className="flex items-center justify-between px-4 py-3">
             {/* Brand — long-press 800ms to toggle underground mode */}
             <div

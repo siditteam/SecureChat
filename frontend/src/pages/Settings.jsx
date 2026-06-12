@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -63,11 +63,12 @@ const NAV = [
 export default function Settings() {
   const { user, updateUser, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
   const { underground, toggleUnderground } = useUnderground();
 
-  const [section, setSection] = useState('profile');
-  const [mobileShowContent, setMobileShowContent] = useState(false);
+  const [section, setSection] = useState(location.state?.section || 'profile');
+  const [mobileShowContent, setMobileShowContent] = useState(!!location.state?.section);
   const [bio, setBio] = useState(user?.bio || '');
   const [privacySettings, setPrivacySettings] = useState({
     showOnlineStatus: user?.settings?.showOnlineStatus ?? true,
@@ -225,7 +226,7 @@ export default function Settings() {
     <div className="h-screen flex flex-col overflow-hidden" style={{ background: 'var(--bg-deep)' }}>
 
       {/* Header */}
-      <div className="shadow-sm flex-shrink-0" style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--card-border)', color: 'var(--text-primary)' }}>
+      <div className="shadow-sm flex-shrink-0" style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--card-border)', color: 'var(--text-primary)', paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="max-w-4xl mx-auto flex items-center gap-3 px-4 py-4">
           <button
             onClick={() => navigate('/')}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
@@ -50,6 +51,7 @@ function Avatar({ name, online, size = 'md' }) {
 }
 
 export default function ChatWindow({ selectedUser, onBack }) {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { socket, connected, sendMessage, pendingCount } = useSocket();
   const { initiateCall, callState } = useCall();
@@ -217,7 +219,7 @@ export default function ChatWindow({ selectedUser, onBack }) {
   return (
     <div className="flex-1 flex flex-col min-w-0" style={{ background: 'var(--bg-surface)' }}>
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3" style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--card-border)', color: 'var(--text-primary)' }}>
+      <div className="flex items-center gap-3 px-4" style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--card-border)', color: 'var(--text-primary)', paddingTop: 'calc(env(safe-area-inset-top) + 12px)', paddingBottom: '12px' }}>
         <button
           onClick={onBack}
           className="md:hidden -ml-1 mr-1 hover:bg-white/20 p-1.5 rounded-lg transition duration-150 flex-shrink-0"
@@ -308,14 +310,21 @@ export default function ChatWindow({ selectedUser, onBack }) {
         )}
 
         {!loading && messages.some(m => m.content === '[Encrypted]' || m.content === '[No private key]') && (
-          <div className="mx-2 mb-2 px-4 py-3 rounded-xl flex items-start gap-3" style={{ background: 'rgba(234,179,8,0.06)', border: '1px solid rgba(234,179,8,0.18)' }}>
-            <svg style={{ width: 15, height: 15, color: 'rgba(161,128,0,0.8)', flexShrink: 0, marginTop: 1 }} fill="currentColor" viewBox="0 0 24 24">
-              <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" />
-            </svg>
-            <p style={{ fontSize: 12, color: 'rgba(120,90,0,0.85)', lineHeight: 1.6 }}>
-              Some messages were encrypted with a different session key.
-              Go to <strong>Settings → Security</strong> to restore your key from another device.
-            </p>
+          <div className="mx-2 mb-2 px-4 py-3 rounded-xl" style={{ background: 'rgba(234,179,8,0.06)', border: '1px solid rgba(234,179,8,0.18)' }}>
+            <div className="flex items-start gap-3">
+              <svg style={{ width: 15, height: 15, color: 'rgba(161,128,0,0.8)', flexShrink: 0, marginTop: 2 }} fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" />
+              </svg>
+              <p style={{ fontSize: 12, color: 'rgba(120,90,0,0.85)', lineHeight: 1.6, margin: 0 }}>
+                Some messages are locked — they were encrypted with a different session key.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/settings', { state: { section: 'security' } })}
+              style={{ marginTop: 10, marginLeft: 26, fontSize: 12, fontWeight: 700, color: 'rgba(120,90,0,0.9)', background: 'rgba(234,179,8,0.12)', border: '1px solid rgba(234,179,8,0.25)', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', display: 'inline-block' }}
+            >
+              Restore my key →
+            </button>
           </div>
         )}
 

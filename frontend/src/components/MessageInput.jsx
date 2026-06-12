@@ -109,7 +109,7 @@ export default function MessageInput({ recipient, onSend, onSendMedia }) {
 
   return (
     <>
-      <div className="px-3 py-3 bg-ink-800/90 backdrop-blur-xl border-t border-white/10 shadow-lg">
+      <div className="px-3 pt-3 bg-ink-800/90 backdrop-blur-xl border-t border-white/10 shadow-lg" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}>
         {error && <p className="text-error text-xs mb-2 px-1 font-medium">{error}</p>}
 
         {/* Timer picker */}
