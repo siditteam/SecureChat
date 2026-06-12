@@ -65,7 +65,12 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
     res.json(response);
   } catch (err) {
     console.error('send-otp error:', err);
-    res.status(500).json({ message: 'Failed to send OTP.' });
+    if (err.message === 'UNVERIFIED_NUMBER') {
+      return res.status(400).json({
+        message: 'This number is not verified on your Twilio trial account. Add it at twilio.com/console/phone-numbers/verified, or set TWILIO_DEV_FALLBACK=true to bypass during testing.',
+      });
+    }
+    res.status(500).json({ message: 'Failed to send verification code. Please try again.' });
   }
 });
 
@@ -154,6 +159,7 @@ router.post('/register', async (req, res) => {
       accountStatus: 'probation',
       probationEndsAt,
       invitedBy: inviteDoc ? inviteDoc.createdBy : null,
+      vouchedBy: inviteDoc && inviteDoc.vouchedBy ? inviteDoc.vouchedBy : null,
       loginVersion: 1,
     });
 
