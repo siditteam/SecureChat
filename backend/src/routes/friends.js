@@ -32,27 +32,27 @@ router.post('/request/:userId', auth, async (req, res) => {
     }
 
     // Check existing
-    const existing = await FriendRequest.findOne({ sender: senderId, receiver: receiverId });
-    if (existing) {
-      if (existing.status === 'accepted') return res.status(409).json({ message: 'Already friends.' });
-      if (existing.status === 'pending')  return res.status(409).json({ message: 'Request already sent.' });
+    let request = await FriendRequest.findOne({ sender: senderId, receiver: receiverId });
+    if (request) {
+      if (request.status === 'accepted') return res.status(409).json({ message: 'Already friends.' });
+      if (request.status === 'pending')  return res.status(409).json({ message: 'Request already sent.' });
       // Was rejected — allow resend
-      existing.status = 'pending';
-      await existing.save();
+      request.status = 'pending';
+      await request.save();
     } else {
-      existing = await FriendRequest.create({ sender: senderId, receiver: receiverId });
+      request = await FriendRequest.create({ sender: senderId, receiver: receiverId });
     }
 
     // Notify recipient in real-time
     ss.emit(receiverId, 'new_friend_request', {
-      _id: existing._id,
+      _id: request._id,
       sender: { _id: senderId, username: req.user.username },
     });
 
     res.status(201).json({
       status: 'pending',
       message: 'Friend request sent.',
-      requestId: existing._id.toString(),
+      requestId: request._id.toString(),
       isSender: true,
     });
   } catch (err) {
