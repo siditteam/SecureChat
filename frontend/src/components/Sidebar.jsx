@@ -81,133 +81,139 @@ function TabButton({ label, active, badge, onClick }) {
 
 // ── Chat list row with swipe-to-reveal (mobile) + hover menu (desktop) ────────
 
-const REVEAL_W = 144; // px revealed on swipe
+const REVEAL_W = 144;
 
 function ChatRow({ u, online, isSelected, onSelect, onClear, onDelete }) {
   const { underground } = useUnderground();
+  // offset: how many px the content is shifted left (0 = closed, REVEAL_W = fully open)
   const [offset, setOffset] = useState(0);
-  const rowRef = useRef(null);
-  const touchStartX = useRef(null);
-  const touchStartY = useRef(null);
-  const isHoriz = useRef(false);
-  const baseOffset = useRef(0);
+  // animate controls whether CSS transition is on (false during active drag)
+  const [animate, setAnimate] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const rowRef  = useRef(null);
   const menuRef = useRef(null);
+  // pointer-based drag state (refs to avoid stale closures in handlers)
+  const dragState = useRef(null); // { startX, startY, startOffset, decided }
 
-  // Attach passive:false touchmove so we can e.preventDefault() during horizontal swipes
-  useEffect(() => {
-    const el = rowRef.current;
-    if (!el) return;
-    const onMove = (e) => {
-      if (!isHoriz.current && touchStartX.current === null) return;
-      const dx = touchStartX.current - e.touches[0].clientX;
-      const dy = Math.abs(e.touches[0].clientY - touchStartY.current);
-      if (!isHoriz.current) {
-        if (Math.abs(dx) < 8 && dy < 8) return;
-        isHoriz.current = Math.abs(dx) > dy;
-        if (!isHoriz.current) return;
-      }
-      e.preventDefault();
-      const raw = baseOffset.current + dx;
-      setOffset(Math.min(Math.max(raw, 0), REVEAL_W));
-    };
-    el.addEventListener('touchmove', onMove, { passive: false });
-    return () => el.removeEventListener('touchmove', onMove);
-  }, []);
-
-  // Close swipe when tapping outside
+  // Close swipe when user taps anywhere outside this row
   useEffect(() => {
     if (offset === 0) return;
-    const close = (e) => {
-      if (rowRef.current && !rowRef.current.contains(e.target)) {
-        setOffset(0); baseOffset.current = 0;
-      }
+    const handler = (e) => {
+      if (rowRef.current && !rowRef.current.contains(e.target)) snap(0);
     };
-    document.addEventListener('pointerdown', close);
-    return () => document.removeEventListener('pointerdown', close);
-  }, [offset]);
+    document.addEventListener('pointerdown', handler);
+    return () => document.removeEventListener('pointerdown', handler);
+  }, [offset]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Close desktop menu when clicking outside
+  // Close desktop menu on outside click
   useEffect(() => {
     if (!menuOpen) return;
-    const close = (e) => {
+    const handler = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
     };
-    document.addEventListener('pointerdown', close);
-    return () => document.removeEventListener('pointerdown', close);
+    document.addEventListener('pointerdown', handler);
+    return () => document.removeEventListener('pointerdown', handler);
   }, [menuOpen]);
 
-  const onTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-    isHoriz.current = false;
-    baseOffset.current = offset;
+  const snap = (to) => { setAnimate(true); setOffset(to); };
+
+  // ── Pointer-event drag (works on touch AND mouse, no passive-listener issues) ──
+  const onPointerDown = (e) => {
+    if (e.pointerType === 'mouse') return; // desktop uses hover menu only
+    dragState.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startOffset: offset,
+      decided: false, // have we decided horizontal vs vertical yet?
+      isHoriz: false,
+    };
+    setAnimate(false);
+    // Pointer capture keeps move/up events on this element even if finger leaves it
+    e.currentTarget.setPointerCapture(e.pointerId);
   };
 
-  const onTouchEnd = () => {
-    const snapped = offset > 60 ? REVEAL_W : 0;
-    setOffset(snapped);
-    baseOffset.current = snapped;
-    touchStartX.current = null;
+  const onPointerMove = (e) => {
+    const d = dragState.current;
+    if (!d || e.pointerType === 'mouse') return;
+    const dx = d.startX - e.clientX;
+    const dy = Math.abs(e.clientY - d.startY);
+    if (!d.decided) {
+      if (Math.abs(dx) < 5 && dy < 5) return; // not moved enough to decide
+      d.decided = true;
+      d.isHoriz = Math.abs(dx) >= dy;
+      if (!d.isHoriz) { dragState.current = null; snap(d.startOffset); return; } // vertical — abort
+    }
+    if (!d.isHoriz) return;
+    const next = Math.min(Math.max(d.startOffset + dx, 0), REVEAL_W);
+    setOffset(next);
   };
 
-  const handleRowClick = () => {
-    if (offset > 0) { setOffset(0); baseOffset.current = 0; return; }
+  const onPointerUp = (e) => {
+    const d = dragState.current;
+    dragState.current = null;
+    if (!d || e.pointerType === 'mouse') return;
+    snap(offset > 60 ? REVEAL_W : 0);
+  };
+
+  const handleContentClick = () => {
+    if (offset > 0) { snap(0); return; }
     onSelect();
   };
 
-  return (
-    <div ref={rowRef} style={{ position: 'relative', overflow: 'hidden' }}
-      onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+  const actionBtn = (bg, onClick, icon, label) => (
+    <button
+      onClick={onClick}
+      style={{
+        flex: 1, border: 'none', cursor: 'pointer', background: bg, color: '#fff',
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'center', gap: 4, fontFamily: "'Space Grotesk', sans-serif",
+        fontSize: 11, fontWeight: 700,
+      }}
+    >
+      {icon}
+      {label}
+    </button>
+  );
 
-      {/* Action buttons — sit behind the sliding row */}
-      <div style={{
-        position: 'absolute', right: 0, top: 0, bottom: 0,
-        width: REVEAL_W, display: 'flex',
-      }}>
-        <button
-          onClick={() => { onClear(u._id); setOffset(0); baseOffset.current = 0; }}
-          style={{
-            flex: 1, border: 'none', cursor: 'pointer',
-            background: '#F59E0B', color: '#fff',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            gap: 3, fontSize: 11, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif",
-          }}
-        >
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-          Clear
-        </button>
-        <button
-          onClick={() => { onDelete(u._id); setOffset(0); baseOffset.current = 0; }}
-          style={{
-            flex: 1, border: 'none', cursor: 'pointer',
-            background: '#EF4444', color: '#fff',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            gap: 3, fontSize: 11, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif",
-          }}
-        >
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" />
-          </svg>
-          Remove
-        </button>
+  return (
+    <div ref={rowRef} style={{ position: 'relative', overflow: 'hidden' }}>
+
+      {/* Action buttons — absolutely behind the content layer */}
+      <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: REVEAL_W, display: 'flex' }}>
+        {actionBtn(
+          '#F59E0B',
+          () => { onClear(u._id); snap(0); },
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>,
+          'Clear'
+        )}
+        {actionBtn(
+          '#EF4444',
+          () => { onDelete(u._id); snap(0); },
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" /></svg>,
+          'Delete'
+        )}
       </div>
 
-      {/* Sliding row content */}
+      {/* Sliding content — ALWAYS opaque so buttons can't bleed through */}
       <div
-        onClick={handleRowClick}
-        className="msg-bubble-wrap"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onClick={handleContentClick}
         style={{
-          display: 'flex', alignItems: 'center', gap: 12,
-          padding: '10px 12px',
-          background: isSelected ? 'rgba(10,163,163,0.08)' : 'var(--bg-surface)',
-          borderLeft: isSelected ? '2px solid var(--accent)' : '2px solid transparent',
-          cursor: 'pointer',
+          position: 'relative', zIndex: 1,
+          display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px',
+          // Opaque background always — semi-transparent backgrounds bleed the orange/red through
+          background: 'var(--bg-surface)',
+          borderLeft: `2px solid ${isSelected ? 'var(--accent)' : 'transparent'}`,
+          // Selected highlight via inset shadow (opaque, no color bleed)
+          boxShadow: isSelected ? 'inset 60px 0 40px -40px rgba(10,163,163,0.10)' : 'none',
           transform: `translateX(-${offset}px)`,
-          transition: touchStartX.current === null ? 'transform 0.22s cubic-bezier(0.25,0.46,0.45,0.94)' : 'none',
-          position: 'relative',
+          transition: animate ? 'transform 0.22s cubic-bezier(0.25,0.46,0.45,0.94)' : 'none',
+          cursor: 'pointer',
+          touchAction: 'pan-y', // let browser handle vertical scroll; we intercept horizontal
+          userSelect: 'none', WebkitUserSelect: 'none',
         }}
       >
         <Avatar name={u.username} online={!underground && online} avatarFile={u.avatar} hidePresence={underground} />
@@ -220,16 +226,16 @@ function ChatRow({ u, online, isSelected, onSelect, onClear, onDelete }) {
           )}
         </div>
 
-        {/* Desktop ⋯ hover menu */}
-        <div ref={menuRef} className="msg-hover-actions" style={{ position: 'relative' }}>
+        {/* Desktop ⋯ — only visible on hover via CSS */}
+        <div ref={menuRef} className="msg-hover-actions" style={{ position: 'relative', flexShrink: 0 }}>
           <button
             onPointerDown={(e) => { e.stopPropagation(); setMenuOpen((s) => !s); }}
             style={{
-              width: 28, height: 28, borderRadius: 8, border: '1px solid var(--card-border)',
-              background: 'var(--bg-surface)', cursor: 'pointer', color: 'var(--text-secondary)',
+              width: 28, height: 28, borderRadius: 8,
+              border: '1px solid var(--card-border)', background: 'var(--bg-surface)',
+              cursor: 'pointer', color: 'var(--text-secondary)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
-            title="More"
           >
             <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
               <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
@@ -237,34 +243,24 @@ function ChatRow({ u, online, isSelected, onSelect, onClear, onDelete }) {
           </button>
           {menuOpen && (
             <div style={{
-              position: 'absolute', right: 0, top: '100%', zIndex: 50, marginTop: 4,
+              position: 'absolute', right: 0, top: '100%', zIndex: 100, marginTop: 4,
               background: 'var(--bg-surface)', border: '1px solid var(--card-border)',
               borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
               overflow: 'hidden', minWidth: 150,
             }}>
-              <button
-                onClick={(e) => { e.stopPropagation(); onClear(u._id); setMenuOpen(false); }}
-                style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#F59E0B', textAlign: 'left' }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(245,158,11,0.06)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-              >
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                Clear chat
-              </button>
-              <div style={{ height: 1, background: 'var(--card-border)' }} />
-              <button
-                onClick={(e) => { e.stopPropagation(); onDelete(u._id); setMenuOpen(false); }}
-                style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#EF4444', textAlign: 'left' }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.06)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-              >
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" />
-                </svg>
-                Remove friend
-              </button>
+              {[
+                { label: 'Clear chat',     color: '#F59E0B', hov: 'rgba(245,158,11,0.06)', fn: () => { onClear(u._id);  setMenuOpen(false); } },
+                { label: 'Delete friend',  color: '#EF4444', hov: 'rgba(239,68,68,0.06)',  fn: () => { onDelete(u._id); setMenuOpen(false); } },
+              ].map(({ label, color, hov, fn }) => (
+                <button key={label}
+                  onClick={(e) => { e.stopPropagation(); fn(); }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = hov}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  style={{ display: 'flex', alignItems: 'center', width: '100%', padding: '10px 14px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600, color, fontFamily: "'Space Grotesk', sans-serif" }}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           )}
         </div>
