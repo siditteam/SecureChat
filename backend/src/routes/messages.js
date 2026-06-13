@@ -89,6 +89,30 @@ router.get('/:userId', auth, async (req, res) => {
   }
 });
 
+// ── CLEAR conversation for me (adds me to deletedFor on every message) ────────
+// Must be before /:id to avoid Express matching "conversation" as an id param
+router.delete('/conversation/:userId', auth, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
+    await Message.updateMany(
+      {
+        $or: [
+          { sender: req.user._id, receiver: userId },
+          { sender: userId, receiver: req.user._id },
+        ],
+      },
+      { $addToSet: { deletedFor: req.user._id } }
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('clear conversation error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // ── DELETE a message ──────────────────────────────────────────────────────────
 // Body: { forEveryone: boolean }
 router.delete('/:id', auth, async (req, res) => {

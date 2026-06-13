@@ -79,6 +79,200 @@ function TabButton({ label, active, badge, onClick }) {
   );
 }
 
+// ── Chat list row with swipe-to-reveal (mobile) + hover menu (desktop) ────────
+
+const REVEAL_W = 144; // px revealed on swipe
+
+function ChatRow({ u, online, isSelected, onSelect, onClear, onDelete }) {
+  const { underground } = useUnderground();
+  const [offset, setOffset] = useState(0);
+  const rowRef = useRef(null);
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+  const isHoriz = useRef(false);
+  const baseOffset = useRef(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Attach passive:false touchmove so we can e.preventDefault() during horizontal swipes
+  useEffect(() => {
+    const el = rowRef.current;
+    if (!el) return;
+    const onMove = (e) => {
+      if (!isHoriz.current && touchStartX.current === null) return;
+      const dx = touchStartX.current - e.touches[0].clientX;
+      const dy = Math.abs(e.touches[0].clientY - touchStartY.current);
+      if (!isHoriz.current) {
+        if (Math.abs(dx) < 8 && dy < 8) return;
+        isHoriz.current = Math.abs(dx) > dy;
+        if (!isHoriz.current) return;
+      }
+      e.preventDefault();
+      const raw = baseOffset.current + dx;
+      setOffset(Math.min(Math.max(raw, 0), REVEAL_W));
+    };
+    el.addEventListener('touchmove', onMove, { passive: false });
+    return () => el.removeEventListener('touchmove', onMove);
+  }, []);
+
+  // Close swipe when tapping outside
+  useEffect(() => {
+    if (offset === 0) return;
+    const close = (e) => {
+      if (rowRef.current && !rowRef.current.contains(e.target)) {
+        setOffset(0); baseOffset.current = 0;
+      }
+    };
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [offset]);
+
+  // Close desktop menu when clicking outside
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [menuOpen]);
+
+  const onTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    isHoriz.current = false;
+    baseOffset.current = offset;
+  };
+
+  const onTouchEnd = () => {
+    const snapped = offset > 60 ? REVEAL_W : 0;
+    setOffset(snapped);
+    baseOffset.current = snapped;
+    touchStartX.current = null;
+  };
+
+  const handleRowClick = () => {
+    if (offset > 0) { setOffset(0); baseOffset.current = 0; return; }
+    onSelect();
+  };
+
+  return (
+    <div ref={rowRef} style={{ position: 'relative', overflow: 'hidden' }}
+      onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+
+      {/* Action buttons — sit behind the sliding row */}
+      <div style={{
+        position: 'absolute', right: 0, top: 0, bottom: 0,
+        width: REVEAL_W, display: 'flex',
+      }}>
+        <button
+          onClick={() => { onClear(u._id); setOffset(0); baseOffset.current = 0; }}
+          style={{
+            flex: 1, border: 'none', cursor: 'pointer',
+            background: '#F59E0B', color: '#fff',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 3, fontSize: 11, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif",
+          }}
+        >
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          Clear
+        </button>
+        <button
+          onClick={() => { onDelete(u._id); setOffset(0); baseOffset.current = 0; }}
+          style={{
+            flex: 1, border: 'none', cursor: 'pointer',
+            background: '#EF4444', color: '#fff',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 3, fontSize: 11, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif",
+          }}
+        >
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" />
+          </svg>
+          Remove
+        </button>
+      </div>
+
+      {/* Sliding row content */}
+      <div
+        onClick={handleRowClick}
+        className="msg-bubble-wrap"
+        style={{
+          display: 'flex', alignItems: 'center', gap: 12,
+          padding: '10px 12px',
+          background: isSelected ? 'rgba(10,163,163,0.08)' : 'var(--bg-surface)',
+          borderLeft: isSelected ? '2px solid var(--accent)' : '2px solid transparent',
+          cursor: 'pointer',
+          transform: `translateX(-${offset}px)`,
+          transition: touchStartX.current === null ? 'transform 0.22s cubic-bezier(0.25,0.46,0.45,0.94)' : 'none',
+          position: 'relative',
+        }}
+      >
+        <Avatar name={u.username} online={!underground && online} avatarFile={u.avatar} hidePresence={underground} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>
+            {u.username}
+          </p>
+          {!underground && online && (
+            <p style={{ fontSize: 11, color: '#10b981', margin: '1px 0 0' }}>● Online</p>
+          )}
+        </div>
+
+        {/* Desktop ⋯ hover menu */}
+        <div ref={menuRef} className="msg-hover-actions" style={{ position: 'relative' }}>
+          <button
+            onPointerDown={(e) => { e.stopPropagation(); setMenuOpen((s) => !s); }}
+            style={{
+              width: 28, height: 28, borderRadius: 8, border: '1px solid var(--card-border)',
+              background: 'var(--bg-surface)', cursor: 'pointer', color: 'var(--text-secondary)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+            title="More"
+          >
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+              <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+            </svg>
+          </button>
+          {menuOpen && (
+            <div style={{
+              position: 'absolute', right: 0, top: '100%', zIndex: 50, marginTop: 4,
+              background: 'var(--bg-surface)', border: '1px solid var(--card-border)',
+              borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+              overflow: 'hidden', minWidth: 150,
+            }}>
+              <button
+                onClick={(e) => { e.stopPropagation(); onClear(u._id); setMenuOpen(false); }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#F59E0B', textAlign: 'left' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(245,158,11,0.06)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Clear chat
+              </button>
+              <div style={{ height: 1, background: 'var(--card-border)' }} />
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(u._id); setMenuOpen(false); }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#EF4444', textAlign: 'left' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.06)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" />
+                </svg>
+                Remove friend
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FriendRow({ u, online, lastSeen, action, onAction, onMessage, isSelected, onSelect, onRemove, onBlock, onViewProfile, onReport }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { underground } = useUnderground();
@@ -407,6 +601,16 @@ export default function Sidebar({ selectedUser, onSelectUser, initialChatUserId,
     } catch { /* ignore */ }
   }, [onSelectUser, selectedUser?._id]);
 
+  const clearConversation = useCallback(async (userId) => {
+    try {
+      await axios.delete(`${API}/messages/conversation/${userId}`);
+      // If this conversation is currently open, clear local messages too
+      if (selectedUser?._id === userId) {
+        window.dispatchEvent(new CustomEvent('unddr:clear_messages', { detail: { userId } }));
+      }
+    } catch { /* ignore */ }
+  }, [selectedUser?._id]);
+
   const [blockTarget, setBlockTarget] = useState(null);
 
   const toast = useToast();
@@ -629,19 +833,14 @@ export default function Sidebar({ selectedUser, onSelectUser, initialChatUserId,
               )}
 
               {filteredChats.map((u) => (
-                <FriendRow
+                <ChatRow
                   key={u._id}
                   u={u}
                   online={online(u)}
-                  lastSeen={lastSeen(u)}
-                  action="message"
                   isSelected={selectedUser?._id === u._id}
                   onSelect={() => openChat(u)}
-                  onMessage={() => openChat(u)}
-                  onRemove={removeFriend}
-                  onBlock={openBlockConfirm}
-                  onReport={(u) => setReportTarget(u)}
-                  onViewProfile={() => navigate(`/add/${u.username}`)}
+                  onClear={clearConversation}
+                  onDelete={removeFriend}
                 />
               ))}
             </div>

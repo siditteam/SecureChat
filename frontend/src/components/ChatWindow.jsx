@@ -299,6 +299,15 @@ export default function ChatWindow({ selectedUser, onBack }) {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, typing]);
 
+  // Clear messages locally when the sidebar fires the clear event
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.detail?.userId === selectedUser?._id) setMessages([]);
+    };
+    window.addEventListener('unddr:clear_messages', handler);
+    return () => window.removeEventListener('unddr:clear_messages', handler);
+  }, [selectedUser?._id]);
+
   // Socket listeners (existing + new action events)
   useEffect(() => {
     if (!socket || !selectedUser) return;
